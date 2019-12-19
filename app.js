@@ -11,6 +11,7 @@ import dbupload from "./routes/db"
 
 import frommstomongo from "./routes/frommstomongo"
 
+require('dotenv').config()
 const app = express();
 
 //set template engine

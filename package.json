@@ -19,6 +19,7 @@
     "cors": "^2.8.4",
     "csv-parse": "^4.6.5",
     "csvtojson": "^2.0.10",
+    "dotenv": "^8.2.0",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
     "fs": "0.0.1-security",

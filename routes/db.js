@@ -2,6 +2,7 @@ import express from "express"
 import ProductError from "../schema/ProductError"
 import { MongoClient } from 'mongodb'
 const { Client } = require('pg')
+require('dotenv').config()
 
 const pgClient = new Client({
   connectionString: process.env.postgresUrl
@@ -23,71 +24,71 @@ const shopify = new Shopify({
   password: process.env.shop_api_password,
   timeout: 50000,
   autoLimit: {
-      calls: 2,
-      interval: 1000,
-      bucketSize: 35
+    calls: 2,
+    interval: 1000,
+    bucketSize: 35
   }
 })
 
 router.get("/templates", async (req, res, next) => {
-    const client = await MongoClient.connect(mongoUrl)
-    const mydb = client.db(dbName)
-    const productCollection = mydb.collection('products')
-    const products = await productCollection.find({SiteID: 1, updatedOnline: 0})
-    
-    products.forEach(product => {
-        shopify.product.get(product.shopifyProductId).then(productResult => {
-          var d = new Date()
-          var thumbnail = productResult.image.src
+  const client = await MongoClient.connect(mongoUrl)
+  const mydb = client.db(dbName)
+  const productCollection = mydb.collection('products')
+  const products = await productCollection.find({SiteID: 1, updatedOnline: 0})
+  
+  products.forEach(product => {
+    shopify.product.get(product.shopifyProductId).then(productResult => {
+      var d = new Date()
+      var thumbnail = productResult.image.src
 
-          var templateQueryText = 'INSERT INTO templates(label, shopify_product_id, thumbnail, created_at, updated_at, shop_id) VALUES($1, $2, $3, $4, $5) RETURNING *'
-          var templateValues = [productResult.title, productResult.id, thumbnail, d, d, 1]
+      var templateQueryText = 'INSERT INTO templates(label, shopify_product_id, thumbnail, created_at, updated_at, shop_id) VALUES($1, $2, $3, $4, $5) RETURNING *'
+      var templateValues = [productResult.title, productResult.id, thumbnail, d, d, 1]
 
-          pgClient
-            .query(templateQueryText, templateValues)
-            .then(res => {
-              var templateId = res.rows[0].id
+      pgClient
+        .query(templateQueryText, templateValues)
+        .then(res => {
+          var templateId = res.rows[0].id
 
-              productCollection.updateOne(
-                {_id: product._id},
-                {$set: {
-                      template_id: templateId,
-                      updatedOnline: 1
-                  }
-                }
-              )
-              
-              productResult.variants.forEach(variant => {
-                var variantQueryText = 'INSERT INTO variants(shopify_variant_id, shopify_product_id, thumbnail, label, price, created_at, updated_at, template_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *'
-                var variantValues = [variant.id, productResult.id, thumbnail, productResult.title + ' - ' + variant.title, variant.price, d, d, templateId]
+          productCollection.updateOne(
+            {_id: product._id},
+            {$set: {
+                template_id: templateId,
+                updatedOnline: 1
+              }
+            }
+          )
+          
+          productResult.variants.forEach(variant => {
+            var variantQueryText = 'INSERT INTO variants(shopify_variant_id, shopify_product_id, thumbnail, label, price, created_at, updated_at, template_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *'
+            var variantValues = [variant.id, productResult.id, thumbnail, productResult.title + ' - ' + variant.title, variant.price, d, d, templateId]
 
-                pgClient
-                  .query(variantQueryText, variantValues)
-                  .then(variantsRes => {
-                    console.log('added: ', product.ProductID)
-                  })
+            pgClient
+              .query(variantQueryText, variantValues)
+              .then(variantsRes => {
+                console.log('added: ', product.ProductID)
               })
-            })
-            .catch(error => {
-              console.log('postgres error: ', error)
-            })
-        }).catch(shopifyError => {
-            console.log('product get error: ', shopifyError)
-            var productError = new ProductError()
-            productError.title = product.ModelName
-            productError.dbProductId = product.ProductID
-            productError.reason = 'could not get product info from store'
-            productError.save(err => {
-                if (err) {
-                    return next(err)
-                } else {
-                    console.log('Could not get product with this: ', product.ProductID)
-                }
-            })
+          })
         })
+        .catch(error => {
+          console.log('postgres error: ', error)
+        })
+    }).catch(shopifyError => {
+      console.log('product get error: ', shopifyError)
+      var productError = new ProductError()
+      productError.title = product.ModelName
+      productError.dbProductId = product.ProductID
+      productError.reason = 'could not get product info from store'
+      productError.save(err => {
+        if (err) {
+          return next(err)
+        } else {
+          console.log('Could not get product with this: ', product.ProductID)
+        }
+      })
     })
-    
-    res.render('home')
+  })
+  
+  res.render('home')
 })
 
 router.get("/attributes", async (req, res, next) => {
@@ -561,17 +562,17 @@ router.get('/testresult', async (req, res, next) => {
 
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
+    await callback(array[index], index, array);
   }
 }
 async function asyncForEach1(array, callback) {
   for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
+    await callback(array[index], index, array);
   }
 }
 async function asyncForEach2(array, callback) {
   for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
+    await callback(array[index], index, array);
   }
 }
 

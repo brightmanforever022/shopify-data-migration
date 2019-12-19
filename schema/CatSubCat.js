@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const catSubCatSchema = new mongoose.Schema({
-    categoryId: String,
+	categoryId: String,
     subCategoryId: String
 });
 

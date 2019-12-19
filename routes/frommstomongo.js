@@ -1,6 +1,7 @@
 import express from "express"
 import msdb from "mssql"
 import { MongoClient } from 'mongodb'
+require('dotenv').config()
 
 const mongoUrl = 'mongodb://localhost:27017'
 const dbName = 'display4sale'
