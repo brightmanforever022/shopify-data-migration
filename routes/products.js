@@ -217,6 +217,12 @@ router.get("/createproducts", async (req, res, next) => {
 					namespace: 'other_options'
 				},
 				{
+					key: 'product_id',
+					value: dbProduct.ProductID,
+					value_type: 'string',
+					namespace: 'base'
+				},
+				{
 					key: 'qty_discounts',
 					value: quantityString,
 					value_type: 'string',
@@ -329,10 +335,10 @@ router.get('/updateproducts', async(req, res, next) => {
 	const productCollection = mydb.collection('products')
 	const dbProductList = await productCollection.find({SiteID: 1})
 	/*const dbProductList = await productCollection.find({SiteID: 1, ProductID: {$in: [
-					'SBMW-SHELF12-4060', 'sstrxlmt-deep-4060', 'PEWLWF-2436', 'ssmcmat2-1824', 'TLESMAT3-1220', 'SCBBIRCH-1117',
-					'DCWLCORK-3648', 'SCIBBL234-9630', 'scmirch-8511p', 'SFWBXL-2484', 'sfwm362-2030',
-					'SBMW-SHELF4-1620', 'ssmcss-8511', 'DCOL2', 'LSCBBRH234-6040', 'sbwlshelf12', 'TBA-4848', 'SCIBBRH234-7230'
-			]
+			'SBMW-SHELF12-4060', 'sstrxlmt-deep-4060', 'PEWLWF-2436', 'ssmcmat2-1824', 'TLESMAT3-1220', 'SCBBIRCH-1117',
+			'DCWLCORK-3648', 'SCIBBL234-9630', 'scmirch-8511p', 'SFWBXL-2484', 'sfwm362-2030',
+			'SBMW-SHELF4-1620', 'ssmcss-8511', 'DCOL2', 'LSCBBRH234-6040', 'sbwlshelf12', 'TBA-4848', 'SCIBBRH234-7230'
+		]
 	}})*/
 	dbProductList.forEach(async (dbProduct) => {
 		// Generate product data to be updated
@@ -340,10 +346,10 @@ router.get('/updateproducts', async(req, res, next) => {
 			id: dbProduct.shopifyProductId,
 			metafields: [
 				{
-					key: 'link1',
-					value: value,
+					key: 'product_id',
+					value: dbProduct.ProductID,
 					value_type: 'string',
-					namespace: 'download'
+					namespace: 'base'
 				}
 			]
 		}
@@ -351,7 +357,7 @@ router.get('/updateproducts', async(req, res, next) => {
 		shopify.product.update(dbProduct.shopifyProductId, product).then(result => {
 			productCollection.updateOne(
 				{_id: dbProduct._id},
-				{$set: {updatedOnline: 5}}
+				{$set: {updatedOnline: 1}}
 			).then(result => {
 				console.log('updated: ', dbProduct.ProductID)
 			})
