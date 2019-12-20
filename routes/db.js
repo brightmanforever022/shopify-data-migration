@@ -73,7 +73,6 @@ router.get("/templates", async (req, res, next) => {
           console.log('postgres error: ', error)
         })
     }).catch(shopifyError => {
-      console.log('product get error: ', shopifyError)
       var productError = new ProductError()
       productError.title = product.ModelName
       productError.dbProductId = product.ProductID
@@ -453,7 +452,6 @@ router.get('/attributeTest', async (req, res, next) => {
   // console.log(attributes.length)
   await asyncForEach(attributes, async (row) => {
     var attribute = row._id
-    console.log('attribute: ', attribute)
     await attributeTestCollection.insertOne({
       Attribute: attribute.Attribute,
       Price: attribute.Price,
