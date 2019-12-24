@@ -30,6 +30,10 @@ const shopify = new Shopify({
   }
 })
 
+router.get('/', (req, res, next) => {
+  res.render('home')
+})
+
 router.get("/templates", async (req, res, next) => {
   const client = await MongoClient.connect(mongoUrl)
   const mydb = client.db(dbName)
@@ -552,9 +556,10 @@ router.get('/groupattributechunk', async (req, res, next) => {
   res.render('home')
 })
 
-router.get('/testresult', async (req, res, next) => {
+router.get('/testresult', (req, res, next) => {
   shopify.product.get(4344878137433).then(productResult => {
     console.log('product result from shopify store: ', productResult.image.src)
+    res.render('home')
   });
 });
 
