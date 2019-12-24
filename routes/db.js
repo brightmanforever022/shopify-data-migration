@@ -554,7 +554,7 @@ router.get('/groupattributechunk', async (req, res, next) => {
 
 router.get('/testresult', async (req, res, next) => {
   shopify.product.get(4344878137433).then(productResult => {
-    console.log('product result from shopify store: ', productResult.image.src);
+    console.log('product result from shopify store: ', productResult.image.src)
   });
 });
 
