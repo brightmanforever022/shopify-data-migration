@@ -32,6 +32,7 @@ const shopify = new Shopify({
 
 router.get('/', (req, res, next) => {
   res.render('home')
+  res.status(200)
 })
 
 router.get("/templates", async (req, res, next) => {

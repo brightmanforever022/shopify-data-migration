@@ -64,6 +64,7 @@ router.get("/", async (req, res, next) => {
 	const client = await MongoClient.connect(mongoUrl)
 	const mydb = client.db(dbName)
 	const collection = mydb.collection('subcategories')
+	
 	// Post subcategories to shopify and store collection data into db. If error, it stores into error list of db
 	const collects = await collection.find({SiteID: 1, MenuURL: ''})
 	collects.forEach(collect => {
