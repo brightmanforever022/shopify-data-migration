@@ -4,7 +4,7 @@ import { MongoClient } from 'mongodb'
 require('dotenv').config()
 
 const mongoUrl = 'mongodb://localhost:27017'
-const dbName = 'display4sale'
+const dbName = 'displays4sale'
 
 const router = express.Router()
 
@@ -175,7 +175,7 @@ router.get("/", async (req, res, next) => {
                         // 'Vendors', 
                         // 'WishList', 
                         // 'WishListAttribute', 
-                        'ZIP_CODES', 
+                        // 'ZIP_CODES', 
                         // 'ZIPCOD'
                     ]
 
@@ -187,23 +187,23 @@ router.get("/", async (req, res, next) => {
         var request = new msdb.Request()
         request.stream = true
         var rowsToProcess = []
-        tableList.forEach(async (tableName) => {
+        tableList.forEach(tableName => {
             var collection = mydb.collection(tableName.toLowerCase())
             // query to the database and get the records
             rowsToProcess = []
             request.query('select * from ' + tableName)
-            request.on('row', row => {
+            request.on('row', async (row) => {
                 rowsToProcess.push(row)
-                if (rowsToProcess.length >= 20) {
+                if (rowsToProcess.length >= 100) {
                     request.pause()
-                    collection.insertMany(rowsToProcess)
+                    await collection.insertMany(rowsToProcess)
                     rowsToProcess = []
                     request.resume()
                 }
             })
-            request.on('done', result => {
-                if (rowsToProcess.length > 0 && rowsToProcess.length < 20) {
-                    collection.insertMany(rowsToProcess)
+            request.on('done', async (result) => {
+                if (rowsToProcess.length > 0 && rowsToProcess.length < 100) {
+                    await collection.insertMany(rowsToProcess)
                 }
                 console.log('end of ', tableName)
             })
