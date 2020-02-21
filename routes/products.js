@@ -104,6 +104,11 @@ router.get('/updatefields', async (req, res, next) => {
 	const dropShippingCollection = mydb.collection('dropshipping')
 	const productfilterchoicesCollection = mydb.collection('productfilterchoices')
 	const filtersCollection = mydb.collection('filters')
+	const productquantityCollection = mydb.collection('productquantities')
+	const productswatchCollection = mydb.collection('productswatches')
+	const productswatchCollection3 = mydb.collection('productswatches3')
+	const productswatchCollection4 = mydb.collection('productswatches4')
+	const productmattesCollection = mydb.collection('productmattes')
 
 	const productIdList = [
 		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
@@ -161,7 +166,6 @@ router.get('/updatefields', async (req, res, next) => {
 		const metafieldsGlobalDescriptionTag = seoDetail[0].MetaDesc
 		// get dropshipping
 		const dropShipping = await dropShippingCollection.find({DropShipID: productItem.DropShipID}).toArray()
-		// console.log('drop shipping: ', dropShipping[0])
 		const vendorName = dropShipping[0].Name
 
 		// get filters and filterchoices
@@ -198,21 +202,169 @@ router.get('/updatefields', async (req, res, next) => {
 			}
 		})
 
-		secondTags = firstTags == '' ? secondTags : ',' + secondTags
-
-		// console.log('second tags: ', secondTags)
+		const secondTagsWithComma = firstTags == '' ? secondTags : ',' + secondTags
 
 		let thirdTag = productItem.FreeGround ? 'free-ground' : ''
 		thirdTag = (firstTags == '' && secondTags == '') ? thirdTag : (thirdTag == '' ? '' : ',' + thirdTag)
 
-		const tagString = firstTags + secondTags + thirdTag
-
-		console.log('----------tags--------------: ', tagString)
+		const tagString = firstTags + secondTagsWithComma + thirdTag
 
 		// ----------------end of product fields-----------------------
 
 		// ---------------start of product images----------------------
 
+		let images = [
+			{
+				position: 1,
+				src: productItem.Image1,
+				alt: seoDetail[0].Image1Alt
+			},
+			{
+				position: 2,
+				src: productItem.Image2,
+				alt: seoDetail[0].Image2Alt
+			},
+			{
+				position: 3,
+				src: productItem.Image3,
+				alt: seoDetail[0].Image3Alt
+			},
+			{
+				position: 4,
+				src: productItem.Image4,
+				alt: seoDetail[0].Image4Alt
+			},
+		]
+
+		// ----------------end of product images-----------------------
+
+		// ---------------start of product custom fields----------------------
+
+		let meta_qty_discounts = ''
+		const quantityList = await productquantityCollection.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+		await asyncForEach1(quantityList, async (quantityItem) => {
+			const qty_discount = 'QTY ' + quantityItem.QuantityFrom + '-' + quantityItem.QuantityTo + ',' +
+														quantityItem.PercentOff + '%, ' + quantityItem.LeadTimeShip + '<br>'
+			meta_qty_discounts += qty_discount
+		})
+		
+		const meta_display_price = productItem.DemoPrice
+		const meta_message = productItem.Message
+		const meta_head_product_intro = productItem.HeadProductIntro
+		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
+		const meta_description = productItem.Section1Content
+		const meta_features_title = productItem.Section2Title
+		const meta_features_content = productItem.Section2Content
+		const meta_additional_title1 = productItem.Section3Title
+		const meta_additional_content1 = productItem.Section3Content
+		const meta_additional_title2 = productItem.Section4Title
+		const meta_additional_content2 = productItem.Section4Content
+		const meta_additional_title3 = productItem.Section5Title
+		const meta_additional_content3 = productItem.Section5Content
+		// const meta_product_options = '???'
+		const meta_specifications_title = 'Specifications'
+		const meta_specifications_content = secondTags
+		const meta_swatch_header1 = productItem.SwatchHeader
+		let meta_swatch_content1 = ''
+		const productSwatchList = await productswatchCollection.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+		productSwatchList.forEach(productSwatchItem => {
+			if (meta_swatch_content1 == '') {
+				meta_swatch_content1 += productSwatchItem.SwatchName
+			} else {
+				meta_swatch_content1 += ',' + productSwatchItem.SwatchName
+			}
+		})
+		
+		const meta_swatch_header2 = productItem.SwatchHeader3
+		let meta_swatch_content2 = ''
+		const productSwatchList2 = await productswatchCollection3.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+		productSwatchList2.forEach(productSwatchItem => {
+			if (meta_swatch_content2 == '') {
+				meta_swatch_content2 += productSwatchItem.SwatchName
+			} else {
+				meta_swatch_content2 += ',' + productSwatchItem.SwatchName
+			}
+		})
+
+		const meta_swatch_header3 = productItem.SwatchHeader4
+		let meta_swatch_content3 = ''
+		const productSwatchList3 = await productswatchCollection4.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+		productSwatchList3.forEach(productSwatchItem => {
+			if (meta_swatch_content3 == '') {
+				meta_swatch_content3 += productSwatchItem.SwatchName
+			} else {
+				meta_swatch_content3 += ',' + productSwatchItem.SwatchName
+			}
+		})
+
+		const meta_mattes_header = productItem.MattesHeader
+		let meta_mattes_content = ''
+		const mattesList = await productmattesCollection.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+
+		mattesList.forEach(mattesItem => {
+			if (meta_mattes_content == '') {
+				meta_mattes_content += mattesItem.MatteName
+			} else {
+				meta_mattes_content += ',' + mattesItem.MatteName
+			}
+		})
+
+		const meta_movie_alt = productItem.MovieAlt
+		const meta_movie_upload = productItem.MovieUpload
+		const meta_movie_upload_name = productItem.MovieUploadName
+		const meta_movie_thumb1 = productItem.MovieThumb1
+		const meta_movie_upload2 = productItem.MovieUpload2
+		const meta_movie_upload2_name = productItem.MovieUpload2Name
+		const meta_movie_upload2_thumb = productItem.MovieThumb2
+		const meta_movie_upload3 = productItem.MoveUpload3
+		const meta_movie_upload3_name = productItem.MovieUpload3Name
+		const meta_movie_upload3_thumb = productItem.MovieThumb3
+		let meta_shipping_options = ''
+		if (productItem.DisplayFreeShipIcon) {
+			meta_shipping_options += 'Free Ground Shipping'
+		} else if (productItem.DisplayCanadaIcon) {
+			meta_shipping_options += '|' + 'Ships to Canada'
+		} else if (productItem.DisplayFedExIcon) {
+			meta_shipping_options += '|' + 'Ships FedEx'
+		}
+		const relatedProductList = await productCollection.find({
+			SiteID: 1,
+			ProductID: {
+				$in: productItem.Related_Products.split(',')
+			}
+		}).toArray()
+		let meta_related_products = ''
+		relatedProductList.forEach(relatedProductItem => {
+			if (meta_related_products == '') {
+				meta_related_products += relatedProductItem.shopifyProductId
+			} else {
+				meta_related_products += ',' + relatedProductItem.shopifyProductId
+			}
+		})
+
+		// console.log('--------- related products: ', meta_related_products)
+		const meta_shipping_tags = '???'
+		const meta_multiple_options = '???'
+
+
+
+		// ---------------end of product custom fields----------------------
+		
 	})
 
 	res.render('home')

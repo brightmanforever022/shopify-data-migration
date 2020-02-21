@@ -1,23 +1,7 @@
 $( document ).ready(function() {
 
 	//on page load keep the user list populated------------START
-	$.ajax({
-		url: "users/list",
-		dataType: "json",
-	})
-	.done((data) => {
-		if(data) {
-			var odata = $.parseJSON(JSON.stringify(data.docs));
-			odata.forEach(item => {
-				$('#myTable > tbody:last-child').append(getRowHtml(item));
-			});
-		}
-	})
-	.fail((err) => {
-		console.log("Error");
-	});  
-	//-------------------------------------------------------END
-
+	
 	//on add user submit the form----------------------------START
 	$("#btnSubmit").click (() => {
 		$("#addUserForm").submit();
