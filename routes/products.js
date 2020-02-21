@@ -57,6 +57,7 @@ router.get("/list", (req, res, next) => {
 		})
 })
 
+/*
 router.get('/prepare1', async (req, res, next) => {
 	const csvFilePath1 = './csv/Products - Copy.csv'
 	const readStream=require('fs').createReadStream(csvFilePath1)
@@ -90,6 +91,130 @@ router.get('/prepare1', async (req, res, next) => {
 	})
 	
 	console.log('end')
+	res.render('home')
+})
+*/
+
+router.get('/updatefields', async (req, res, next) => {
+	const client = await MongoClient.connect(mongoUrl)
+	const mydb = client.db(dbName)
+	const productCollection = mydb.collection('products')
+	const subcatCollection = mydb.collection('productsubcat')
+	const seoCollection = mydb.collection('productseo')
+	const dropShippingCollection = mydb.collection('dropshipping')
+	const productfilterchoicesCollection = mydb.collection('productfilterchoices')
+	const filtersCollection = mydb.collection('filters')
+
+	const productIdList = [
+		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
+		'scm-1117p', 'lscl', 'CBOECL-5050', 
+		'TTR855', 'abmc', 'TKM514', 
+		'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 
+		'sfwlbhl', 'fdg', 'sswf'
+	]
+
+	const productList = await productCollection.find({SiteID: 1, ProductID: {$in: productIdList}})
+	productList.forEach(async (productItem) => {
+		const productTitle = productItem.ModelName
+		const productSKU = productItem.ProductID
+		const productBodyHtml = productItem.FullDesc
+		// get title of subCategory
+		const subCat = await subcatCollection.aggregate([
+			{
+				$match:
+				{
+					'ProductID': productItem.ProductID,
+					'SiteID': 1
+				}
+			},
+			{
+				$lookup:
+				{
+					from: "subcategories",
+					localField: "SubCatID",
+					foreignField: "SubCatID",
+					as: "subcategoryDetail"
+				}
+			}
+		]).toArray()
+
+		const productType = subCat[0] ? subCat[0].subcategoryDetail[0].Title : 'cannotfind'
+		// get current time
+		let date_ob = new Date()
+		const currentTimestamp = date_ob.getFullYear() + "-" + 
+													("0" + (date_ob.getMonth() + 1)).slice(-2) + "-" +
+													("0" + date_ob.getDate()).slice(-2) + "T" +
+													("0" + date_ob.getHours()).slice(-2) + ":" +
+													("0" + date_ob.getMinutes()).slice(-2) + ":" +
+													("0" + date_ob.getSeconds()).slice(-2)
+		
+		const publishedAt = productItem.Active ? currentTimestamp : null
+
+		// get first tags
+		const seoDetail = await seoCollection.find({
+			SiteID: 1,
+			ProductID: productItem.ProductID
+		}).toArray()
+
+		const firstTags = seoDetail[0].MetaKeywords
+		const metafieldsGlobalTitleTag = seoDetail[0].PageTitle
+		const metafieldsGlobalDescriptionTag = seoDetail[0].MetaDesc
+		// get dropshipping
+		const dropShipping = await dropShippingCollection.find({DropShipID: productItem.DropShipID}).toArray()
+		// console.log('drop shipping: ', dropShipping[0])
+		const vendorName = dropShipping[0].Name
+
+		// get filters and filterchoices
+		const filterChoiceList = await productfilterchoicesCollection.aggregate([
+			{
+				$match:
+				{
+					'product_id': productItem.ProductID
+				}
+			},
+			{
+				$lookup:
+				{
+					from: "filterchoices",
+					localField: "filter_choice_id",
+					foreignField: "filter_choice_id",
+					as: "filterchoiceDetail"
+				}
+			}
+		]).toArray()
+
+		let secondTags = ''
+
+		await asyncForEach1(filterChoiceList, async (filterchoiceItem) => {
+			if (filterchoiceItem.filterchoiceDetail[0]) {
+				const filterchoiceDetail = filterchoiceItem.filterchoiceDetail[0]
+				const filterDetail = await filtersCollection.find({filter_id: filterchoiceDetail.filter_id}).toArray()
+				const filterString = filterDetail[0].name + ':' + filterchoiceDetail.name
+				if (secondTags == '') {
+					secondTags += filterString
+				} else {
+					secondTags += ',' + filterString
+				}
+			}
+		})
+
+		secondTags = firstTags == '' ? secondTags : ',' + secondTags
+
+		// console.log('second tags: ', secondTags)
+
+		let thirdTag = productItem.FreeGround ? 'free-ground' : ''
+		thirdTag = (firstTags == '' && secondTags == '') ? thirdTag : (thirdTag == '' ? '' : ',' + thirdTag)
+
+		const tagString = firstTags + secondTags + thirdTag
+
+		console.log('----------tags--------------: ', tagString)
+
+		// ----------------end of product fields-----------------------
+
+		// ---------------start of product images----------------------
+
+	})
+
 	res.render('home')
 })
 

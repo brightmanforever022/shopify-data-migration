@@ -3,7 +3,6 @@ import ProductError from "../schema/ProductError"
 import { MongoClient } from 'mongodb'
 const { Client } = require('pg')
 require('dotenv').config()
-
 const pgClient = new Client({
   connectionString: process.env.postgresUrl
 })
@@ -30,11 +29,6 @@ const shopify = new Shopify({
   }
 })
 
-router.get('/', (req, res, next) => {
-  res.render('home')
-  res.status(200)
-})
-
 router.get("/templates", async (req, res, next) => {
   const client = await MongoClient.connect(mongoUrl)
   const mydb = client.db(dbName)
@@ -44,9 +38,9 @@ router.get("/templates", async (req, res, next) => {
   products.forEach(product => {
     shopify.product.get(product.shopifyProductId).then(productResult => {
       var d = new Date()
+      
       var thumbnail = productResult.image.src
-
-      var templateQueryText = 'INSERT INTO templates(label, shopify_product_id, thumbnail, created_at, updated_at, shop_id) VALUES($1, $2, $3, $4, $5) RETURNING *'
+      var templateQueryText = 'INSERT INTO templates(label, shopify_product_id, thumbnail, created_at, updated_at, shop_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *'
       var templateValues = [productResult.title, productResult.id, thumbnail, d, d, 1]
 
       pgClient
@@ -62,7 +56,7 @@ router.get("/templates", async (req, res, next) => {
               }
             }
           )
-          
+          // Insert variants into db
           productResult.variants.forEach(variant => {
             var variantQueryText = 'INSERT INTO variants(shopify_variant_id, shopify_product_id, thumbnail, label, price, created_at, updated_at, template_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *'
             var variantValues = [variant.id, productResult.id, thumbnail, productResult.title + ' - ' + variant.title, variant.price, d, d, templateId]
@@ -94,6 +88,7 @@ router.get("/templates", async (req, res, next) => {
   
   res.render('home')
 })
+
 
 router.get("/attributes", async (req, res, next) => {
   const client = await MongoClient.connect(mongoUrl)
