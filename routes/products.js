@@ -95,6 +95,30 @@ router.get('/prepare1', async (req, res, next) => {
 })
 */
 
+router.get('/importSpecialOptions', async (req, res, next) => {
+	const client = await MongoClient.connect(mongoUrl)
+	const mydb = client.db(dbName)
+	const productSpecialTitlesCollection = mydb.collection('product-special-titles')
+	const { GoogleSpreadsheet } = require('google-spreadsheet')
+	const doc = new GoogleSpreadsheet('19IPmNH1OnuF0lUi_Yc9JJBPYPY8JjOeyDWIuuu3cgr0')
+	doc.useApiKey('AIzaSyDlWW8RzuB9x3vfa9DWTgeHjYUnlCl6m-Q')
+	
+	await doc.loadInfo()
+	const sheet = doc.sheetsByIndex[1]
+	const rows = await sheet.getRows()
+	asyncForEach1(rows, async (optionRow) => {
+		// const sectionTitles = optionRow._rawData.split(',')
+		const rowData = {
+			Section3Title: optionRow._rawData[0] ? optionRow._rawData[0] : '',
+			Section4Title: optionRow._rawData[1] ? optionRow._rawData[1] : '',
+			Section5Title: optionRow._rawData[2] ? optionRow._rawData[2] : ''
+		}
+		await productSpecialTitlesCollection.insert(rowData)
+
+	})
+	
+})
+
 router.get('/updatefields', async (req, res, next) => {
 	const client = await MongoClient.connect(mongoUrl)
 	const mydb = client.db(dbName)
@@ -109,7 +133,24 @@ router.get('/updatefields', async (req, res, next) => {
 	const productswatchCollection3 = mydb.collection('productswatches3')
 	const productswatchCollection4 = mydb.collection('productswatches4')
 	const productmattesCollection = mydb.collection('productmattes')
+	const productSpecialTitlesCollection = mydb.collection('product-special-titles')
 
+	// getting special section title list
+	let sectionTitleList1 = []
+	let sectionTitleList2 = []
+	let sectionTitleList3 = []
+	const specialTitleList = await productSpecialTitlesCollection.find({})
+	specialTitleList.forEach(specialTitleItem => {
+		if (specialTitleItem.Section3Title != '') {
+			sectionTitleList1.push(specialTitleItem.Section3Title)
+		}
+		if (specialTitleItem.Section4Title != '') {
+			sectionTitleList2.push(specialTitleItem.Section4Title)
+		}
+		if (specialTitleItem.Section5Title != '') {
+			sectionTitleList3.push(specialTitleItem.Section5Title)
+		}
+	})
 	const productIdList = [
 		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
 		'scm-1117p', 'lscl', 'CBOECL-5050', 
@@ -358,8 +399,8 @@ router.get('/updatefields', async (req, res, next) => {
 		})
 
 		// console.log('--------- related products: ', meta_related_products)
-		const meta_shipping_tags = '???'
-		const meta_multiple_options = '???'
+		// const meta_shipping_tags = '???'
+		// const meta_multiple_options = '???'
 
 
 
