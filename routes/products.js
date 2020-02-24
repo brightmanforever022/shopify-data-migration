@@ -100,8 +100,8 @@ router.get('/importSpecialOptions', async (req, res, next) => {
 	const mydb = client.db(dbName)
 	const productSpecialTitlesCollection = mydb.collection('product-special-titles')
 	const { GoogleSpreadsheet } = require('google-spreadsheet')
-	const doc = new GoogleSpreadsheet('19IPmNH1OnuF0lUi_Yc9JJBPYPY8JjOeyDWIuuu3cgr0')
-	doc.useApiKey('AIzaSyDlWW8RzuB9x3vfa9DWTgeHjYUnlCl6m-Q')
+	const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID)
+	doc.useApiKey(process.env.GOOGLE_API_KEY)
 	
 	await doc.loadInfo()
 	const sheet = doc.sheetsByIndex[1]
