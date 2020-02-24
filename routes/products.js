@@ -299,13 +299,40 @@ router.get('/updatefields', async (req, res, next) => {
 		const meta_description = productItem.Section1Content
 		const meta_features_title = productItem.Section2Title
 		const meta_features_content = productItem.Section2Content
-		const meta_additional_title1 = productItem.Section3Title
-		const meta_additional_content1 = productItem.Section3Content
-		const meta_additional_title2 = productItem.Section4Title
-		const meta_additional_content2 = productItem.Section4Content
-		const meta_additional_title3 = productItem.Section5Title
-		const meta_additional_content3 = productItem.Section5Content
-		// const meta_product_options = '???'
+		let meta_additional_title1 = ''
+		let meta_additional_content1 = ''
+		let meta_otheroptions_title1 = ''
+		let meta_otheroptions_content1 = ''
+		let meta_additional_title2 = ''
+		let meta_additional_content2 = ''
+		let meta_otheroptions_title2 = ''
+		let meta_otheroptions_content2 = ''
+		let meta_additional_title3 = ''
+		let meta_additional_content3 = ''
+		let meta_otheroptions_title3 = ''
+		let meta_otheroptions_content3 = ''
+		if (sectionTitleList1.includes(productItem.Section3Title)) {
+			meta_otheroptions_title1 = productItem.Section3Title
+			meta_otheroptions_content1 = productItem.Section3Content
+		} else {
+			meta_additional_title1 = productItem.Section3Title
+			meta_additional_content1 = productItem.Section3Content
+		}
+		if (sectionTitleList2.includes(productItem.Section4Title)) {
+			meta_otheroptions_title2 = productItem.Section4Title
+			meta_otheroptions_content2 = productItem.Section4Content
+		} else {
+			meta_additional_title2 = productItem.Section4Title
+			meta_additional_content2 = productItem.Section4Content
+		}
+		if (sectionTitleList3.includes(productItem.Section5Title)) {
+			meta_otheroptions_title3 = productItem.Section5Title
+			meta_otheroptions_content3 = productItem.Section5Content
+		} else {
+			meta_additional_title3 = productItem.Section5Title
+			meta_additional_content3 = productItem.Section5Content
+		}
+		
 		const meta_specifications_title = 'Specifications'
 		const meta_specifications_content = secondTags
 		const meta_swatch_header1 = productItem.SwatchHeader
@@ -397,6 +424,8 @@ router.get('/updatefields', async (req, res, next) => {
 				meta_related_products += ',' + relatedProductItem.shopifyProductId
 			}
 		})
+
+		const meta_warranty_returns = productItem.HasWarranty
 
 		// console.log('--------- related products: ', meta_related_products)
 		// const meta_shipping_tags = '???'
