@@ -134,6 +134,9 @@ router.get('/updatefields', async (req, res, next) => {
 	const productswatchCollection4 = mydb.collection('productswatches4')
 	const productmattesCollection = mydb.collection('productmattes')
 	const productSpecialTitlesCollection = mydb.collection('product-special-titles')
+	const chartRowCollection = mydb.collection('chartrows')
+	const chartColumnCollection = mydb.collection('chartcolumns')
+	const chartValueCollection = mydb.collection('chartvalues')
 
 	// getting special section title list
 	let sectionTitleList1 = []
@@ -301,32 +304,26 @@ router.get('/updatefields', async (req, res, next) => {
 		const meta_features_content = productItem.Section2Content
 		let meta_additional_title1 = ''
 		let meta_additional_content1 = ''
-		let meta_otheroptions_title1 = ''
 		let meta_otheroptions_content1 = ''
 		let meta_additional_title2 = ''
 		let meta_additional_content2 = ''
-		let meta_otheroptions_title2 = ''
 		let meta_otheroptions_content2 = ''
 		let meta_additional_title3 = ''
 		let meta_additional_content3 = ''
-		let meta_otheroptions_title3 = ''
 		let meta_otheroptions_content3 = ''
 		if (sectionTitleList1.includes(productItem.Section3Title)) {
-			meta_otheroptions_title1 = productItem.Section3Title
 			meta_otheroptions_content1 = productItem.Section3Content
 		} else {
 			meta_additional_title1 = productItem.Section3Title
 			meta_additional_content1 = productItem.Section3Content
 		}
 		if (sectionTitleList2.includes(productItem.Section4Title)) {
-			meta_otheroptions_title2 = productItem.Section4Title
 			meta_otheroptions_content2 = productItem.Section4Content
 		} else {
 			meta_additional_title2 = productItem.Section4Title
 			meta_additional_content2 = productItem.Section4Content
 		}
 		if (sectionTitleList3.includes(productItem.Section5Title)) {
-			meta_otheroptions_title3 = productItem.Section5Title
 			meta_otheroptions_content3 = productItem.Section5Content
 		} else {
 			meta_additional_title3 = productItem.Section5Title
@@ -427,284 +424,305 @@ router.get('/updatefields', async (req, res, next) => {
 
 		const meta_warranty_returns = productItem.HasWarranty
 
+		// getting string of sizechart
+		let sizechartString = ''
+		let chartRowList = await chartRowCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).sort({ RowNum: 1 }).toArray()
+		let chartColumnList = await chartColumnCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).toArray()
+
+		await asyncForEach1(chartColumnList, async (chartColumn) => {
+			sizechartString += chartColumn.ColumnName + ','
+		})
+		sizechartString = sizechartString.slice(0, -1)
+		sizechartString += '\n'
+		await asyncForEach2(chartRowList, async (chartRow) => {
+			const chartValues = await chartValueCollection.find({ChartRowID: chartRow.ChartRowID}).sort({ChartColumnID: 1}).toArray()
+			const columnString = await chartValues.map(chartValue => {
+					return chartValue.ChartValue
+			})
+			sizechartString += columnString.join(',')
+			sizechartString += '\n'
+		})
+
+		sizechartString = sizechartString.slice(0, -1)
+
+		// Get the string for product badges
+		// Quick Shipping and Free Shipping -> quick|free
+		let meta_product_badges = ''
+		if (productItem.ShipDaysFrom < 3 && productItem.ShipDaysTo < 4) {
+			meta_product_badges += 'quick'
+		}
+		if (productItem.DisplayFreightIcon || productItem.DisplayFreeShipIcon) {
+			meta_product_badges += meta_product_badges == '' ? 'free' : '|free'
+		}
+
 		// const meta_shipping_tags = '???'
 		// const meta_multiple_options = '???'
 
 		// ---------------end of product custom fields----------------------
 		// -----------update product------------------
+
+		const productData = {
+			title: productTitle,
+			body_html: productBodyHtml,
+			product_type: productType,
+			published_at: publishedAt,
+			metafields_global_title_tag: metafieldsGlobalTitleTag,
+			metafields_global_description_tag: metafieldsGlobalDescriptionTag,
+			vendor: vendorName,
+			tags: tagString,
+			images: images,
+			// meta data
+			metafields: [
+				{
+					key: 'qty_discounts',
+					value: meta_qty_discounts,
+					value_type: 'string',
+					namespace: 'block'
+				},
+				{
+					key: 'display_price',
+					value: meta_display_price,
+					value_type: 'string',
+					namespace: 'base'
+				},
+				{
+					key: 'message',
+					value: meta_message,
+					value_type: 'string',
+					namespace: 'base'
+				},
+				{
+					key: 'head_product_intro',
+					value: meta_head_product_intro,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'description_title',
+					value: meta_description_title,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'description',
+					value: meta_description,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'features_title',
+					value: meta_features_title,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'features_content',
+					value: meta_features_content,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'product_badges',
+					value: meta_product_badges,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'title1',
+					value: meta_additional_title1,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'title2',
+					value: meta_additional_title2,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'title3',
+					value: meta_additional_title3,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content1',
+					value: meta_additional_content1,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content2',
+					value: meta_additional_content2,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content3',
+					value: meta_additional_content3,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content1',
+					value: meta_otheroptions_content1,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
+				{
+					key: 'content2',
+					value: meta_otheroptions_content2,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
+				{
+					key: 'content3',
+					value: meta_otheroptions_content3,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
+				{
+					key: 'subject',
+					value: meta_specifications_title,
+					value_type: 'string',
+					namespace: 'specifications'
+				},
+				{
+					key: 'contents',
+					value: meta_specifications_content,
+					value_type: 'string',
+					namespace: 'specifications'
+				},
+				{
+					key: 'header1',
+					value: meta_swatch_header1,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'header2',
+					value: meta_swatch_header2,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'header3',
+					value: meta_swatch_header3,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'content1',
+					value: meta_swatch_content1,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'content2',
+					value: meta_swatch_content2,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'content3',
+					value: meta_swatch_content3,
+					value_type: 'string',
+					namespace: 'swatch'
+				},
+				{
+					key: 'header',
+					value: meta_mattes_header,
+					value_type: 'string',
+					namespace: 'mattes'
+				},
+				{
+					key: 'content',
+					value: meta_mattes_content,
+					value_type: 'string',
+					namespace: 'mattes'
+				},
+				{
+					key: 'alt_text',
+					value: meta_movie_alt,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload1',
+					value: meta_movie_upload,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload2',
+					value: meta_movie_upload2,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload3',
+					value: meta_movie_upload3,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload_name1',
+					value: meta_movie_upload_name,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload_name2',
+					value: meta_movie_upload2_name,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'upload_name3',
+					value: meta_movie_upload3_name,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'thumb1',
+					value: meta_movie_thumb1,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'thumb2',
+					value: meta_movie_upload2_thumb,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'thumb3',
+					value: meta_movie_upload3_thumb,
+					value_type: 'string',
+					namespace: 'movie'
+				},
+				{
+					key: 'shipping_options',
+					value: meta_shipping_options,
+					value_type: 'string',
+					namespace: 'shipping'
+				},
+				{
+					key: 'related_products',
+					value: meta_related_products,
+					value_type: 'string',
+					namespace: 'overview'
+				},
+				{
+					key: 'warranty_returns',
+					value: meta_warranty_returns,
+					value_type: 'string',
+					namespace: 'warranty'
+				}
+			]
+		}
 		try{
-			await shopify.product.update(productItem.shopifyProductId, {
-				title: productTitle,
-				body_html: productBodyHtml,
-				product_type: productType,
-				published_at: publishedAt,
-				metafields_global_title_tag: metafieldsGlobalTitleTag,
-				metafields_global_description_tag: metafieldsGlobalDescriptionTag,
-				vendor: vendorName,
-				tags: tagString,
-				images: images,
-				// meta data
-				metafields: [
-					{
-						key: 'qty_discounts',
-						value: meta_qty_discounts,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'display_price',
-						value: meta_display_price,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'message',
-						value: meta_message,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'head_product_intro',
-						value: meta_head_product_intro,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'description_title',
-						value: meta_description_title,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'description',
-						value: meta_description,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'features_title',
-						value: meta_features_title,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'features_content',
-						value: meta_features_content,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_title1',
-						value: meta_additional_title1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_title2',
-						value: meta_additional_title2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_title3',
-						value: meta_additional_title3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_content1',
-						value: meta_additional_content1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_content2',
-						value: meta_additional_content2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'additional_content3',
-						value: meta_additional_content3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_title1',
-						value: meta_otheroptions_title1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_title2',
-						value: meta_otheroptions_title2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_title3',
-						value: meta_otheroptions_title3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_content1',
-						value: meta_otheroptions_content1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_content2',
-						value: meta_otheroptions_content2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'otheroptions_content3',
-						value: meta_otheroptions_content3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'specifications_title',
-						value: meta_specifications_title,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'specifications_content',
-						value: meta_specifications_content,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_header1',
-						value: meta_swatch_header1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_header2',
-						value: meta_swatch_header2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_header3',
-						value: meta_swatch_header3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_content1',
-						value: meta_swatch_content1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_content2',
-						value: meta_swatch_content2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'swatch_content3',
-						value: meta_swatch_content3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'mattes_header',
-						value: meta_mattes_header,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'mattes_content',
-						value: meta_mattes_content,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_alt',
-						value: meta_movie_alt,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload',
-						value: meta_movie_upload,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload2',
-						value: meta_movie_upload2,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload3',
-						value: meta_movie_upload3,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload_name',
-						value: meta_movie_upload_name,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload2_name',
-						value: meta_movie_upload2_name,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload3_name',
-						value: meta_movie_upload3_name,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_thumb1',
-						value: meta_movie_thumb1,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload2_thumb',
-						value: meta_movie_upload2_thumb,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'movie_upload3_thumb',
-						value: meta_movie_upload3_thumb,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'shipping_options',
-						value: meta_shipping_options,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'related_products',
-						value: meta_related_products,
-						value_type: 'string',
-						namespace: 'overview'
-					},
-					{
-						key: 'warranty_returns',
-						value: meta_warranty_returns,
-						value_type: 'string',
-						namespace: 'overview'
-					}
-				]
-			})
+			await shopify.product.update(productItem.shopifyProductId, productData)
 		} catch (updateError) {
 			var productError = new ProductError()
 			productError.title = dbProduct.ModelName
@@ -766,7 +784,7 @@ router.get("/createproducts", async (req, res, next) => {
 
 		// Getting the string of size chart
 		var sizechartString = ''
-		var chartRowList = await chartRowCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).toArray()
+		var chartRowList = await chartRowCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).sort({ RowNum: 1 }).toArray()
 		var chartColumnList = await chartColumnCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).toArray()
 
 		await asyncForEach1(chartColumnList, async (chartColumn) => {
@@ -833,6 +851,12 @@ router.get("/createproducts", async (req, res, next) => {
 					value: dbProduct.Section3Content ? dbProduct.Section3Content : '',
 					value_type: 'string',
 					namespace: 'specifications'
+				},
+				{
+					key: 'size_chart',
+					value: sizechartString,
+					value_type: 'string',
+					namespace: 'sizechart'
 				},
 				{
 					key: 'option_title',
