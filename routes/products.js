@@ -427,14 +427,297 @@ router.get('/updatefields', async (req, res, next) => {
 
 		const meta_warranty_returns = productItem.HasWarranty
 
-		// console.log('--------- related products: ', meta_related_products)
 		// const meta_shipping_tags = '???'
 		// const meta_multiple_options = '???'
 
-
-
 		// ---------------end of product custom fields----------------------
-		
+		// -----------update product------------------
+		try{
+			await shopify.product.update(productItem.shopifyProductId, {
+				title: productTitle,
+				body_html: productBodyHtml,
+				product_type: productType,
+				published_at: publishedAt,
+				metafields_global_title_tag: metafieldsGlobalTitleTag,
+				metafields_global_description_tag: metafieldsGlobalDescriptionTag,
+				vendor: vendorName,
+				tags: tagString,
+				images: images,
+				// meta data
+				metafields: [
+					{
+						key: 'qty_discounts',
+						value: meta_qty_discounts,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'display_price',
+						value: meta_display_price,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'message',
+						value: meta_message,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'head_product_intro',
+						value: meta_head_product_intro,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'description_title',
+						value: meta_description_title,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'description',
+						value: meta_description,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'features_title',
+						value: meta_features_title,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'features_content',
+						value: meta_features_content,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_title1',
+						value: meta_additional_title1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_title2',
+						value: meta_additional_title2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_title3',
+						value: meta_additional_title3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_content1',
+						value: meta_additional_content1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_content2',
+						value: meta_additional_content2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'additional_content3',
+						value: meta_additional_content3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_title1',
+						value: meta_otheroptions_title1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_title2',
+						value: meta_otheroptions_title2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_title3',
+						value: meta_otheroptions_title3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_content1',
+						value: meta_otheroptions_content1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_content2',
+						value: meta_otheroptions_content2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'otheroptions_content3',
+						value: meta_otheroptions_content3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'specifications_title',
+						value: meta_specifications_title,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'specifications_content',
+						value: meta_specifications_content,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_header1',
+						value: meta_swatch_header1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_header2',
+						value: meta_swatch_header2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_header3',
+						value: meta_swatch_header3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_content1',
+						value: meta_swatch_content1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_content2',
+						value: meta_swatch_content2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'swatch_content3',
+						value: meta_swatch_content3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'mattes_header',
+						value: meta_mattes_header,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'mattes_content',
+						value: meta_mattes_content,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_alt',
+						value: meta_movie_alt,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload',
+						value: meta_movie_upload,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload2',
+						value: meta_movie_upload2,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload3',
+						value: meta_movie_upload3,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload_name',
+						value: meta_movie_upload_name,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload2_name',
+						value: meta_movie_upload2_name,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload3_name',
+						value: meta_movie_upload3_name,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_thumb1',
+						value: meta_movie_thumb1,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload2_thumb',
+						value: meta_movie_upload2_thumb,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'movie_upload3_thumb',
+						value: meta_movie_upload3_thumb,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'shipping_options',
+						value: meta_shipping_options,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'related_products',
+						value: meta_related_products,
+						value_type: 'string',
+						namespace: 'overview'
+					},
+					{
+						key: 'warranty_returns',
+						value: meta_warranty_returns,
+						value_type: 'string',
+						namespace: 'overview'
+					}
+				]
+			})
+		} catch (updateError) {
+			var productError = new ProductError()
+			productError.title = dbProduct.ModelName
+			productError.dbProductId = dbProduct.ProductID
+			productError.reason = updateError
+			productError.save(err => {
+				if (err) {
+					return next(err)
+				} else {
+					console.log('Could not update product metafields with this: ', dbProduct.ProductID)
+				}
+			})
+		}
 	})
 
 	res.render('home')
