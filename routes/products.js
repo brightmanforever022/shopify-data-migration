@@ -387,7 +387,7 @@ router.get('/updatefields', async (req, res, next) => {
 		}).toArray()
 		await asyncForEach1(quantityList, async (quantityItem) => {
 			const qty_discount = 'QTY ' + quantityItem.QuantityFrom + '-' + quantityItem.QuantityTo + ',' +
-														quantityItem.PercentOff + '%, ' + quantityItem.LeadTimeShip + '<br>'
+														quantityItem.PercentOff + '%, ' + quantityItem.LeadTimeShip + '\n'
 			meta_qty_discounts += qty_discount
 		})
 		
@@ -827,6 +827,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// {
 				// 	key: 'shipping_options',
 				// 	value: meta_shipping_options,
+				// 	value_type: 'string',
+				// 	namespace: 'shipping'
+				// },
+				// {
+				// 	key: 'shipping_summary',
+				// 	value: meta_qty_discounts,
 				// 	value_type: 'string',
 				// 	namespace: 'shipping'
 				// },
