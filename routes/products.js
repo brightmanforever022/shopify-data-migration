@@ -119,6 +119,40 @@ router.get('/importSpecialOptions', async (req, res, next) => {
 	
 })
 
+router.get('/testmeta', async (req, res, next) => {
+	const client = await MongoClient.connect(mongoUrl)
+	const mydb = client.db(dbName)
+	const productCollection = mydb.collection('products')
+
+	const productIdList = [
+		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
+		'scm-1117p', 'lscl', 'CBOECL-5050', 
+		'TTR855', 'abmc', 'TKM514', 
+		'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 
+		'sfwlbhl', 'fdg', 'sswf'
+	]
+
+	const productList = await productCollection.find({SiteID: 1, ProductID: {$in: productIdList}})
+	productList.forEach(async (productItem) => {
+		shopify.metafield
+			.list({
+				metafield: { owner_resource: 'product', owner_id: productItem.shopifyProductId }
+			})
+			.then(
+				(metafields) => {
+					metafields.map(mf => {
+						if (mf.key == 'header2' && mf.namespace == 'swatch') {
+							console.log(mf)
+						}
+					})
+				},
+				(err) => console.error(err)
+			);
+	})
+
+	res.render('home')
+})
+
 router.get('/updatefields', async (req, res, next) => {
 	const client = await MongoClient.connect(mongoUrl)
 	const mydb = client.db(dbName)
@@ -138,6 +172,68 @@ router.get('/updatefields', async (req, res, next) => {
 	const chartColumnCollection = mydb.collection('chartcolumns')
 	const chartValueCollection = mydb.collection('chartvalues')
 
+	// Initialize variables for specifications tab
+	const specialSectionTitleList = [
+		'General Info',
+		'Dimensions',
+		'Frame Info',
+		'Matboard Info',
+		'Post Info',
+		'Banner Stand Specifications',
+		'Cork Board Specifications',
+		'Dry / Wet Erase Board Specifications',
+		'Letter Board Specifications',
+		'Chalk Board Specifications',
+		'Easy-Tack Specifications',
+		'Menu Specifications',
+		'Multi-Panel / Art Bin Specifications'
+	]
+	const filterNameList = [
+		[
+			'Application Type', 'Brand', 'Carrying Case', 'Display Type', 'Features', 'Finishes', 'Header', 
+			'Hinge Location', 'Lighting', 'Literature (Brochure) Holders', 'Maximum Wind Resistance', 'Multi-Tiered', 
+			'Number of Advertisements to Display', 'Number of Doors', 'Number of Sides', 'Orientation', 'Placement Type', 
+			'Security Feature', 'Shelf Type', 'Telescopic Display', 'WeatherPlus Add-ons'
+		],
+		[
+			'Interior Depth', 'Maximum Insert Thickness', 'Overall Depth', 'Overall Height', 'Sizes', 'Newspaper Size', 'Menu Size'
+		],
+		[
+			'Corner Style', 'Frame Shape', 'Frame Style', 'Frame Type', 'Frame Width'
+		],
+		[
+			'Decorative Mat Border Included', 'Matboard Width'
+		],
+		[
+			'Base Style', 'Base Width'
+		],
+		[
+			'Banner Mounting Method', 'Banner Width', 'Number of Banners to Display', 'Purchase an Optional Banner'
+		],
+		[
+			'Fabric Over Cork', 'Forbo Cork Board Color', 'Painted Cork Colors', 'Vinyl Over Cork'
+		],
+		[
+			'Dry / Wet Erase Boards', 'Dry Erase Board Material'
+		],
+		[
+			'Letter / Character Set Type', 'Letter / Character Size', 'Letter / Character Style', 'Letter / Reader Set Color', 
+			'Letter Tracks', 'Letterboard Color', 'Letterboard Material'
+		],
+		[
+			'Chalk Board Color', 'Chalk Board Type'
+		],
+		[
+			'Easy-Tack Fabric'
+		],
+		[
+			'Menu Orientation', 'Number of Menus to Display'
+		],
+		[
+			'Art Bin Displaying Method', 'Art Bin Tray Levels', 'Number of Panels', 'Print Protector Backing Board', 
+			'Print Protector Border Color', 'Print Protector BorderType', 'Print Protector Overlay', 'Number of Rolled Posters'
+		]
+	]
 	// getting special section title list
 	let sectionTitleList1 = []
 	let sectionTitleList2 = []
@@ -260,22 +356,22 @@ router.get('/updatefields', async (req, res, next) => {
 		let images = [
 			{
 				position: 1,
-				src: productItem.Image1,
+				src: 'https://displays4sale.com/i/p1/' + productItem.Image1,
 				alt: seoDetail[0].Image1Alt
 			},
 			{
 				position: 2,
-				src: productItem.Image2,
+				src: 'https://displays4sale.com/i/p2/' + productItem.Image2,
 				alt: seoDetail[0].Image2Alt
 			},
 			{
 				position: 3,
-				src: productItem.Image3,
+				src: 'https://displays4sale.com/i/p3/' + productItem.Image3,
 				alt: seoDetail[0].Image3Alt
 			},
 			{
 				position: 4,
-				src: productItem.Image4,
+				src: 'https://displays4sale.com/i/p4/' + productItem.Image4,
 				alt: seoDetail[0].Image4Alt
 			},
 		]
@@ -295,7 +391,7 @@ router.get('/updatefields', async (req, res, next) => {
 			meta_qty_discounts += qty_discount
 		})
 		
-		const meta_display_price = productItem.DemoPrice
+		const meta_display_price = productItem.DemoPrice.toString()
 		const meta_message = productItem.Message
 		const meta_head_product_intro = productItem.HeadProductIntro
 		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
@@ -331,7 +427,28 @@ router.get('/updatefields', async (req, res, next) => {
 		}
 		
 		const meta_specifications_title = 'Specifications'
-		const meta_specifications_content = secondTags
+		// Getting the contents of specifications tab
+		const filterData = secondTags.split(',')
+		let meta_specifications_content = ''
+		specialSectionTitleList.forEach((specialSectionTitle, sectionTitleIndex) => {
+			filterNameList[sectionTitleIndex].forEach((filterName, filterIndex) => {
+				let properFilters = filterData.filter(fd => fd.includes(filterName))
+				if (properFilters.length > 0) {
+					// if result doesn't include sectionTitle, it adds it
+					meta_specifications_content += meta_specifications_content.includes(specialSectionTitle) ? '' : '<h2>' + specialSectionTitle + '</h2><br/>'
+					meta_specifications_content += filterName + ': '
+					let properFilterOptions = properFilters.map(pf => {
+						const splittedFilterString = pf.split(':')
+						return splittedFilterString[1]
+					})
+					meta_specifications_content += properFilterOptions.join(', ') + '<br/>'
+				}
+			})
+		})
+
+		// console.log('------second tags: ', secondTags)
+		// console.log('------specifications content: ', meta_specifications_content)
+		
 		const meta_swatch_header1 = productItem.SwatchHeader
 		let meta_swatch_content1 = ''
 		const productSwatchList = await productswatchCollection.find({
@@ -396,16 +513,16 @@ router.get('/updatefields', async (req, res, next) => {
 		const meta_movie_upload2 = productItem.MovieUpload2
 		const meta_movie_upload2_name = productItem.MovieUpload2Name
 		const meta_movie_upload2_thumb = productItem.MovieThumb2
-		const meta_movie_upload3 = productItem.MoveUpload3
+		const meta_movie_upload3 = productItem.MovieUpload3
 		const meta_movie_upload3_name = productItem.MovieUpload3Name
 		const meta_movie_upload3_thumb = productItem.MovieThumb3
 		let meta_shipping_options = ''
 		if (productItem.DisplayFreeShipIcon) {
 			meta_shipping_options += 'Free Ground Shipping'
 		} else if (productItem.DisplayCanadaIcon) {
-			meta_shipping_options += '|' + 'Ships to Canada'
+			meta_shipping_options += meta_shipping_options == '' ? 'Ships to Canada' : '|Ships to Canada'
 		} else if (productItem.DisplayFedExIcon) {
-			meta_shipping_options += '|' + 'Ships FedEx'
+			meta_shipping_options += meta_shipping_options == '' ? 'Ships FedEx' : '|Ships FedEx'
 		}
 		const relatedProductList = await productCollection.find({
 			SiteID: 1,
@@ -422,12 +539,12 @@ router.get('/updatefields', async (req, res, next) => {
 			}
 		})
 
-		const meta_warranty_returns = productItem.HasWarranty
+		const meta_warranty_returns = productItem.HasWarranty ? 'warranty' : ''
 
 		// getting string of sizechart
 		let sizechartString = ''
-		let chartRowList = await chartRowCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).sort({ RowNum: 1 }).toArray()
-		let chartColumnList = await chartColumnCollection.find({SiteID: 1, ProductID: dbProduct.ProductID}).toArray()
+		let chartRowList = await chartRowCollection.find({SiteID: 1, ProductID: productItem.ProductID}).sort({ RowNum: 1 }).toArray()
+		let chartColumnList = await chartColumnCollection.find({SiteID: 1, ProductID: productItem.ProductID}).toArray()
 
 		await asyncForEach1(chartColumnList, async (chartColumn) => {
 			sizechartString += chartColumn.ColumnName + ','
@@ -462,277 +579,285 @@ router.get('/updatefields', async (req, res, next) => {
 		// -----------update product------------------
 
 		const productData = {
-			title: productTitle,
-			body_html: productBodyHtml,
-			product_type: productType,
-			published_at: publishedAt,
-			metafields_global_title_tag: metafieldsGlobalTitleTag,
-			metafields_global_description_tag: metafieldsGlobalDescriptionTag,
-			vendor: vendorName,
-			tags: tagString,
-			images: images,
+			// 'title': productTitle,
+			// 'body_html': productBodyHtml,
+			// 'product_type': productType,
+			// 'published_at': publishedAt,
+			// 'metafields_global_title_tag': metafieldsGlobalTitleTag,
+			// 'metafields_global_description_tag': metafieldsGlobalDescriptionTag,
+			// 'vendor': vendorName,
+			// 'tags': tagString,
+			// 'images': images,
 			// meta data
-			metafields: [
-				{
-					key: 'qty_discounts',
-					value: meta_qty_discounts,
-					value_type: 'string',
-					namespace: 'block'
-				},
-				{
-					key: 'display_price',
-					value: meta_display_price,
-					value_type: 'string',
-					namespace: 'base'
-				},
-				{
-					key: 'message',
-					value: meta_message,
-					value_type: 'string',
-					namespace: 'base'
-				},
-				{
-					key: 'head_product_intro',
-					value: meta_head_product_intro,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'description_title',
-					value: meta_description_title,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'description',
-					value: meta_description,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'features_title',
-					value: meta_features_title,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'features_content',
-					value: meta_features_content,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'product_badges',
-					value: meta_product_badges,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'title1',
-					value: meta_additional_title1,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'title2',
-					value: meta_additional_title2,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'title3',
-					value: meta_additional_title3,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'content1',
-					value: meta_additional_content1,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'content2',
-					value: meta_additional_content2,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'content3',
-					value: meta_additional_content3,
-					value_type: 'string',
-					namespace: 'additions'
-				},
-				{
-					key: 'content1',
-					value: meta_otheroptions_content1,
-					value_type: 'string',
-					namespace: 'other_options'
-				},
-				{
-					key: 'content2',
-					value: meta_otheroptions_content2,
-					value_type: 'string',
-					namespace: 'other_options'
-				},
-				{
-					key: 'content3',
-					value: meta_otheroptions_content3,
-					value_type: 'string',
-					namespace: 'other_options'
-				},
-				{
-					key: 'subject',
-					value: meta_specifications_title,
-					value_type: 'string',
-					namespace: 'specifications'
-				},
-				{
-					key: 'contents',
-					value: meta_specifications_content,
-					value_type: 'string',
-					namespace: 'specifications'
-				},
-				{
-					key: 'header1',
-					value: meta_swatch_header1,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'header2',
-					value: meta_swatch_header2,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'header3',
-					value: meta_swatch_header3,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'content1',
-					value: meta_swatch_content1,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'content2',
-					value: meta_swatch_content2,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'content3',
-					value: meta_swatch_content3,
-					value_type: 'string',
-					namespace: 'swatch'
-				},
-				{
-					key: 'header',
-					value: meta_mattes_header,
-					value_type: 'string',
-					namespace: 'mattes'
-				},
-				{
-					key: 'content',
-					value: meta_mattes_content,
-					value_type: 'string',
-					namespace: 'mattes'
-				},
-				{
-					key: 'alt_text',
-					value: meta_movie_alt,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload1',
-					value: meta_movie_upload,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload2',
-					value: meta_movie_upload2,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload3',
-					value: meta_movie_upload3,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload_name1',
-					value: meta_movie_upload_name,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload_name2',
-					value: meta_movie_upload2_name,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'upload_name3',
-					value: meta_movie_upload3_name,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'thumb1',
-					value: meta_movie_thumb1,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'thumb2',
-					value: meta_movie_upload2_thumb,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'thumb3',
-					value: meta_movie_upload3_thumb,
-					value_type: 'string',
-					namespace: 'movie'
-				},
-				{
-					key: 'shipping_options',
-					value: meta_shipping_options,
-					value_type: 'string',
-					namespace: 'shipping'
-				},
-				{
-					key: 'related_products',
-					value: meta_related_products,
-					value_type: 'string',
-					namespace: 'overview'
-				},
-				{
-					key: 'warranty_returns',
-					value: meta_warranty_returns,
-					value_type: 'string',
-					namespace: 'warranty'
-				}
+			'metafields': [
+				// {
+				// 	key: 'qty_discounts',
+				// 	value: meta_qty_discounts,
+				// 	value_type: 'string',
+				// 	namespace: 'block'
+				// },
+				// {
+				// 	'key': 'display_price',
+				// 	'value': meta_display_price,
+				// 	'value_type': 'string',
+				// 	'namespace': 'base'
+				// },
+				// {
+				// 	key: 'message',
+				// 	value: meta_message,
+				// 	value_type: 'string',
+				// 	namespace: 'base'
+				// },
+				// {
+				// 	key: 'head_product_intro',
+				// 	value: meta_head_product_intro,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'description_title',
+				// 	value: meta_description_title,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'description',
+				// 	value: meta_description,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'features_title',
+				// 	value: meta_features_title,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'features_content',
+				// 	value: meta_features_content,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'product_badges',
+				// 	value: meta_product_badges,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'title1',
+				// 	value: meta_additional_title1,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'title2',
+				// 	value: meta_additional_title2,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'title3',
+				// 	value: meta_additional_title3,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'content1',
+				// 	value: meta_additional_content1,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'content2',
+				// 	value: meta_additional_content2,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'content3',
+				// 	value: meta_additional_content3,
+				// 	value_type: 'string',
+				// 	namespace: 'additions'
+				// },
+				// {
+				// 	key: 'content1',
+				// 	value: meta_otheroptions_content1,
+				// 	value_type: 'string',
+				// 	namespace: 'other_options'
+				// },
+				// {
+				// 	key: 'content2',
+				// 	value: meta_otheroptions_content2,
+				// 	value_type: 'string',
+				// 	namespace: 'other_options'
+				// },
+				// {
+				// 	key: 'content3',
+				// 	value: meta_otheroptions_content3,
+				// 	value_type: 'string',
+				// 	namespace: 'other_options'
+				// },
+				// {
+				// 	key: 'subject',
+				// 	value: meta_specifications_title,
+				// 	value_type: 'string',
+				// 	namespace: 'specifications'
+				// },
+				// {
+				// 	key: 'content',
+				// 	value: meta_specifications_content.toString(),
+				// 	value_type: 'string',
+				// 	namespace: 'specifications'
+				// },
+				// {
+				// 	key: 'sizechart',
+				// 	value: sizechartString,
+				// 	value_type: 'string',
+				// 	namespace: 'sizechart'
+				// },
+				// {
+				// 	key: 'header1',
+				// 	value: meta_swatch_header1,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'header2',
+				// 	value: meta_swatch_header2,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'header3',
+				// 	value: meta_swatch_header3,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'content1',
+				// 	value: meta_swatch_content1,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'content2',
+				// 	value: meta_swatch_content2,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'content3',
+				// 	value: meta_swatch_content3,
+				// 	value_type: 'string',
+				// 	namespace: 'swatch'
+				// },
+				// {
+				// 	key: 'header',
+				// 	value: meta_mattes_header,
+				// 	value_type: 'string',
+				// 	namespace: 'mattes'
+				// },
+				// {
+				// 	key: 'content',
+				// 	value: meta_mattes_content,
+				// 	value_type: 'string',
+				// 	namespace: 'mattes'
+				// },
+				// {
+				// 	key: 'alt_text',
+				// 	value: meta_movie_alt,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload1',
+				// 	value: meta_movie_upload,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload2',
+				// 	value: meta_movie_upload2,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload3',
+				// 	value: meta_movie_upload3,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload_name1',
+				// 	value: meta_movie_upload_name,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload_name2',
+				// 	value: meta_movie_upload2_name,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'upload_name3',
+				// 	value: meta_movie_upload3_name,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'thumb1',
+				// 	value: meta_movie_thumb1,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'thumb2',
+				// 	value: meta_movie_upload2_thumb,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'thumb3',
+				// 	value: meta_movie_upload3_thumb,
+				// 	value_type: 'string',
+				// 	namespace: 'movie'
+				// },
+				// {
+				// 	key: 'shipping_options',
+				// 	value: meta_shipping_options,
+				// 	value_type: 'string',
+				// 	namespace: 'shipping'
+				// },
+				// {
+				// 	key: 'related_products',
+				// 	value: meta_related_products,
+				// 	value_type: 'string',
+				// 	namespace: 'base'
+				// },
+				// {
+				// 	key: 'warranty_returns',
+				// 	value: meta_warranty_returns,
+				// 	value_type: 'string',
+				// 	namespace: 'warranty'
+				// }
 			]
 		}
+		// console.log('------product data: ', productData)
 		try{
 			await shopify.product.update(productItem.shopifyProductId, productData)
+			console.log('updated with: ', productItem.ProductID)
 		} catch (updateError) {
 			var productError = new ProductError()
-			productError.title = dbProduct.ModelName
-			productError.dbProductId = dbProduct.ProductID
+			productError.title = productItem.ModelName
+			productError.productItem = productItem.ProductID
 			productError.reason = updateError
 			productError.save(err => {
 				if (err) {
 					return next(err)
 				} else {
-					console.log('Could not update product metafields with this: ', dbProduct.ProductID)
+					console.log('Could not update product metafields with this: ', productItem.ProductID)
 				}
 			})
 		}
@@ -827,12 +952,6 @@ router.get("/createproducts", async (req, res, next) => {
 					value: dbProduct.WarrantyPopup,
 					value_type: 'string',
 					namespace: 'overview'
-				},
-				{
-					key: 'size_chart',
-					value: sizechartString,
-					value_type: 'string',
-					namespace: 'sizechart'
 				},
 				{
 					key: 'ship_desc',
