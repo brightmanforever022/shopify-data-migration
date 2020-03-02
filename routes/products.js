@@ -125,7 +125,9 @@ router.get('/testmeta', async (req, res, next) => {
 	const productCollection = mydb.collection('products')
 
 	const productIdList = [
-		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
+		'tlbs', 
+		'sfc', 
+		'SBMW-SHELF8-2024', 
 		'scm-1117p', 'lscl', 'CBOECL-5050', 
 		'TTR855', 'abmc', 'TKM514', 
 		'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 
@@ -141,8 +143,8 @@ router.get('/testmeta', async (req, res, next) => {
 			.then(
 				(metafields) => {
 					metafields.map(mf => {
-						if (mf.key == 'header2' && mf.namespace == 'swatch') {
-							console.log(mf)
+						if (mf.key == 'shipping_summary' && mf.namespace == 'shipping') {
+							console.log('----', productItem.ProductID, mf)
 						}
 					})
 				},
@@ -251,7 +253,9 @@ router.get('/updatefields', async (req, res, next) => {
 		}
 	})
 	const productIdList = [
-		'tlbs', 'sfc', 'SBMW-SHELF8-2024', 
+		'tlbs',
+		'sfc', 
+		'SBMW-SHELF8-2024', 
 		'scm-1117p', 'lscl', 'CBOECL-5050', 
 		'TTR855', 'abmc', 'TKM514', 
 		'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 
@@ -259,6 +263,7 @@ router.get('/updatefields', async (req, res, next) => {
 	]
 
 	const productList = await productCollection.find({SiteID: 1, ProductID: {$in: productIdList}})
+	// const productList = await productCollection.find({SiteID: 1})
 	productList.forEach(async (productItem) => {
 		const productTitle = productItem.ModelName
 		const productSKU = productItem.ProductID
@@ -390,10 +395,31 @@ router.get('/updatefields', async (req, res, next) => {
 														quantityItem.PercentOff + '%, ' + quantityItem.LeadTimeShip + '\n'
 			meta_qty_discounts += qty_discount
 		})
+		meta_qty_discounts = meta_qty_discounts.slice(0, -1)
 		
 		const meta_display_price = productItem.DemoPrice.toString()
 		const meta_message = productItem.Message
 		const meta_head_product_intro = productItem.HeadProductIntro
+		let meta_overview_options = ''
+		if (productItem.DisplayDesignIcon) {
+			meta_overview_options += 'Customizable'
+		}
+		if (productItem.DisplayFreeShipIcon) {
+			meta_overview_options += meta_overview_options == '' ? 'Free Ground Shipping' : '|Free Ground Shipping'
+		}
+		if (productItem.DisplayCanadaIcon) {
+			meta_overview_options += meta_overview_options == '' ? 'Ships to Canada' : '|Ships to Canada'
+		}
+		if (productItem.DisplayFedExIcon) {
+			meta_overview_options += meta_overview_options == '' ? 'Ships FedEx' : '|Ships FedEx'
+		}
+		if (productItem.DisplayPrintIcon) {
+			meta_overview_options += meta_overview_options == '' ? 'Print Services Available' : '|Print Services Available'
+		}
+		if (productItem.DisplaySaleDiscount) {
+			meta_overview_options += meta_overview_options == '' ? 'Price Match' : '|Price Match'
+		}
+
 		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
 		const meta_description = productItem.Section1Content
 		const meta_features_title = productItem.Section2Title
@@ -519,9 +545,11 @@ router.get('/updatefields', async (req, res, next) => {
 		let meta_shipping_options = ''
 		if (productItem.DisplayFreeShipIcon) {
 			meta_shipping_options += 'Free Ground Shipping'
-		} else if (productItem.DisplayCanadaIcon) {
+		}
+		if (productItem.DisplayCanadaIcon) {
 			meta_shipping_options += meta_shipping_options == '' ? 'Ships to Canada' : '|Ships to Canada'
-		} else if (productItem.DisplayFedExIcon) {
+		}
+		if (productItem.DisplayFedExIcon) {
 			meta_shipping_options += meta_shipping_options == '' ? 'Ships FedEx' : '|Ships FedEx'
 		}
 		const relatedProductList = await productCollection.find({
@@ -561,6 +589,8 @@ router.get('/updatefields', async (req, res, next) => {
 		})
 
 		sizechartString = sizechartString.slice(0, -1)
+
+		// console.log('-----', productItem.ProductID, sizechartString)
 
 		// Get the string for product badges
 		// Quick Shipping and Free Shipping -> quick|free
@@ -611,6 +641,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// {
 				// 	key: 'head_product_intro',
 				// 	value: meta_head_product_intro,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
+				// {
+				// 	key: 'options',
+				// 	value: meta_overview_options,
 				// 	value_type: 'string',
 				// 	namespace: 'overview'
 				// },
@@ -850,23 +886,24 @@ router.get('/updatefields', async (req, res, next) => {
 				// }
 			]
 		}
-		// console.log('------product data: ', productData)
-		try{
-			await shopify.product.update(productItem.shopifyProductId, productData)
-			console.log('updated with: ', productItem.ProductID)
-		} catch (updateError) {
-			var productError = new ProductError()
-			productError.title = productItem.ModelName
-			productError.productItem = productItem.ProductID
-			productError.reason = updateError
-			productError.save(err => {
-				if (err) {
-					return next(err)
-				} else {
-					console.log('Could not update product metafields with this: ', productItem.ProductID)
-				}
-			})
-		}
+		// console.log('------product data: ', meta_qty_discounts)
+		console.log('------product data: ', sizechartString)
+		// try{
+		// 	await shopify.product.update(productItem.shopifyProductId, productData)
+		// 	console.log('updated with: ', productItem.ProductID)
+		// } catch (updateError) {
+		// 	var productError = new ProductError()
+		// 	productError.title = productItem.ModelName
+		// 	productError.productItem = productItem.ProductID
+		// 	productError.reason = updateError
+		// 	productError.save(err => {
+		// 		if (err) {
+		// 			return next(err)
+		// 		} else {
+		// 			console.log('Could not update product metafields with this: ', productItem.ProductID)
+		// 		}
+		// 	})
+		// }
 	})
 
 	res.render('home')

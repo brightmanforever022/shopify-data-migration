@@ -20,6 +20,64 @@ const shopify = new Shopify({
 	}
 })
 
+router.get('/importgooglesheet', async (req, res, next) => {
+	const client = await MongoClient.connect(mongoUrl)
+	const mydb = client.db(dbName)
+	const tempCollectionsCollection = mydb.collection('temp-collections')
+	const { GoogleSpreadsheet } = require('google-spreadsheet')
+	const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID)
+	doc.useApiKey(process.env.GOOGLE_API_KEY)
+	
+	await doc.loadInfo()
+	const sheet = doc.sheetsByIndex[2]
+	const rows = await sheet.getRows()
+	asyncForEach1(rows, async (optionRow) => {
+		let columnData = optionRow._rawData[4] ? optionRow._rawData[4] : ''
+		columnData = columnData.split(',').map(el => el.trim()).filter(cd => cd != '')
+		// console.log('column data: ', columnData)
+		columnData.map(async (collectionTitle) => {
+			const rowData = {
+				category1: optionRow._rawData[0] ? optionRow._rawData[0] : '',
+				category2: optionRow._rawData[1] ? optionRow._rawData[1] : '',
+				category3: optionRow._rawData[2] ? optionRow._rawData[2] : '',
+				category4: optionRow._rawData[3] ? optionRow._rawData[3] : '',
+				newCategory: collectionTitle
+			}
+			await tempCollectionsCollection.insert(rowData)
+		})
+
+	})
+	res.render('home')
+})
+
+router.get('/uploadNewCategories', async (req, res, next) => {
+	const client = await MongoClient.connect(mongoUrl)
+	const mydb = client.db(dbName)
+	const collection = mydb.collection('temp-collections')
+	const collectionError = mydb.collection('collection-error')
+	
+	// Post subcategories to shopify and store collection data into db. If error, it stores into error list of db
+	const collects = await collection.find({})
+	collects.forEach(collect => {
+		// console.log('collect name: ', collect.newCategory)
+		shopify.customCollection.create({
+			title: collect.newCategory
+		}).then(result => {
+			console.log('created: ', result.id + ': ' + collect.newCategory)
+			collection.updateOne(
+				{_id: collect._id},
+				{$set: {shopifyCollectionId: result.id}}
+			)
+		}).catch(shopifyError => {
+			collectionError.insertOne({
+				title: collect.newCategory,
+				reason: shopifyError
+			})
+		})
+	})
+	
+	res.render('home')
+})
 router.get("/prepare2", async (req, res, next) => {
 	const csvFilePath3 = './csv/SubCategories.csv'
 	const subCatList = await csv().fromFile(csvFilePath3)
@@ -98,5 +156,11 @@ router.get("/", async (req, res, next) => {
 	
 	res.render('home')
 })
+
+async function asyncForEach1(array, callback) {
+	for (let index = 0; index < array.length; index++) {
+		await callback(array[index], index, array);
+	}
+}
 
 module.exports = router
