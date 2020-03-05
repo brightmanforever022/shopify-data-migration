@@ -1209,7 +1209,6 @@ router.get('/getFirstProperty', async (req, res, next) => {
 			attribCatCollection.findOne({AttribCatID: attribCatResult.AttribCatID}).then(result => {
 				if (!propertyList.includes(result.AttrCategory)) {
 					propertyList.push(result.AttrCategory)
-					// console.log(result.AttrCategory)
 				}
 			})
 		})
@@ -1353,7 +1352,7 @@ router.get('/uploadAttributes', async (req, res, next) => {
 		mainPropertyList['a' + attribCat.AttribCatID] = propertyName
 		mainPropertyIDList.push(attribCat.AttribCatID)
 	})
-	const productList = await productCollection.find({SiteID: 1})    
+	const productList = await productCollection.find({SiteID: 1})
 })
 
 module.exports = router
