@@ -33,15 +33,39 @@ router.get("/templates", async (req, res, next) => {
   const client = await MongoClient.connect(mongoUrl)
   const mydb = client.db(dbName)
   const productCollection = mydb.collection('products')
-  const products = await productCollection.find({SiteID: 1, updatedOnline: 0})
+  const templateErrorCollection = mydb.collection('error-template')
+  await productCollection.createIndex({ ProductID: 1, SiteID: 1 })
+
+  const productIdList = [
+		'tlbs', 
+		'sfc', 
+		'SBMW-SHELF8-2024', 
+		'scm-1117p', 'lscl', 'CBOECL-5050', 
+		'TTR855', 'abmc', 'TKM514', 
+		'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 
+		'sfwlbhl', 'fdg', 'sswf'
+  ]
+  
+  const products = await productCollection.find(
+    { 
+      ProductID: { $in: productIdList } , 
+      SiteID: 1 
+    }, 
+    { 
+      Image1: 1, 
+      ModelName: 1, 
+      shopifyProductId: 1 
+    }
+  )
   
   products.forEach(product => {
-    shopify.product.get(product.shopifyProductId).then(productResult => {
+    // shopify.product.get(product.shopifyProductId).then(productResult => {
+    try {
       var d = new Date()
       
-      var thumbnail = productResult.image.src
+      var thumbnail = 'https://displays4sale.com/i/p1/' + product.Image1
       var templateQueryText = 'INSERT INTO templates(label, shopify_product_id, thumbnail, created_at, updated_at, shop_id) VALUES($1, $2, $3, $4, $5, $6) RETURNING *'
-      var templateValues = [productResult.title, productResult.id, thumbnail, d, d, 1]
+      var templateValues = [product.ModelName, product.shopifyProductId, thumbnail, d, d, 1]
 
       pgClient
         .query(templateQueryText, templateValues)
@@ -56,34 +80,21 @@ router.get("/templates", async (req, res, next) => {
               }
             }
           )
-          // Insert variants into db
-          productResult.variants.forEach(variant => {
-            var variantQueryText = 'INSERT INTO variants(shopify_variant_id, shopify_product_id, thumbnail, label, price, created_at, updated_at, template_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *'
-            var variantValues = [variant.id, productResult.id, thumbnail, productResult.title + ' - ' + variant.title, variant.price, d, d, templateId]
-
-            pgClient
-              .query(variantQueryText, variantValues)
-              .then(variantsRes => {
-                console.log('added: ', product.ProductID)
-              })
-          })
         })
         .catch(error => {
           console.log('postgres error: ', error)
         })
-    }).catch(shopifyError => {
-      var productError = new ProductError()
-      productError.title = product.ModelName
-      productError.dbProductId = product.ProductID
-      productError.reason = 'could not get product info from store'
-      productError.save(err => {
-        if (err) {
-          return next(err)
-        } else {
-          console.log('Could not get product with this: ', product.ProductID)
-        }
-      })
-    })
+      } catch (pgErr) {
+        templateErrorCollection.insertOne({
+          'title': product.ModelName,
+          'dbProductId': product.ProductID,
+          'reason': 'could not upload template info into online db'
+        }).then(() => {
+          console.log('error generated in: ', product.ProductID)
+        }).catch(() => {
+          console.log('error, but, could not insert this into db')
+        })
+      }
   })
   
   res.render('home')

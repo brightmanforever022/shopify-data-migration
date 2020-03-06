@@ -1423,7 +1423,7 @@ router.get('/updatefields', async (req, res, next) => {
 			'variants': [
 				{
 					'id': productItem.shopifyFirstVariantId,
-					'sku': productItem.ProductID
+					'sku': productItem.ProductID.toUpperCase()
 				}
 			],
 			// meta data
