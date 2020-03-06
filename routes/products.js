@@ -57,6 +57,24 @@ router.get("/list", (req, res, next) => {
 		})
 })
 
+router.get('/deleteAllProducts', async (req, res, next) => {
+	res.render('home')
+	const productcount = await shopify.product.count()
+	const pages = Math.ceil(productcount / 250)
+	for (var i = 0; i < pages; i++) {
+		const productList = await shopify.product.list({
+			limit: 250,
+			// page: i + 1,
+			fields: 'id, title'
+		})
+		productList.map(pr => {
+			shopify.product.delete(pr.id)
+		})
+		console.log(i + ' of ' + pages)
+	}
+	res.render('home')
+})
+
 /*
 router.get('/prepare1', async (req, res, next) => {
 	const csvFilePath1 = './csv/Products - Copy.csv'
