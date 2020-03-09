@@ -110,8 +110,19 @@ router.get("/attributes", async (req, res, next) => {
   const attribCatCollection = mydb.collection('attribcat')
   const attributesCollection = mydb.collection('attributes')
 
-  const mainPropertyNameString = "Display Type, Viewable Area, Overall Size, Insert Size, Poster Board Size, Interior Size, Menu Case Layout, Cork Board Frame Size, Letterboard Size, Corkboard Size, Panel Size, Helvetica Letter Sets, Graphic Insert, Dry Erase Board Size, Banner Stand, SignHolders, Display Width, Sidewalk Sign, Light Post Sign, Sign Panel , Sign Stand, Easy Tack Board Size, Cork Bar Length, Post Options , Poster Width, Clamps, Graphic Holders, Graphic Width, Fabric Graphic Size, Chalk Board Size, Reader Letter Sets, Message Panel Size, Wet Erase Board Size, Roman Letter Sets, Floor Stand, Style, Easel, Clamp Sign Stand, Counter Top Display, Marker Type, Sign Face, Letter Tracks, Additional Headers, Letter Set, Backing Board, Overall Sleeve Size, Overall Panel Size, Poster (Insert) Size, Finish, Portable Pole Sign, Marker Board Size, Header Panel, Brochure Holder, Newspaper Name, Newspaper Size, Wall Bracket, Moulding Display, Poster Size, Base Width, Tabletop Sign Stand, Pole/Base, Elliptical Stand, Banner Size, Magnetic Mount, Catalog Holders, Plastic Lenses"
-  const mainPropertyNameList = mainPropertyNameString.split(', ')
+  const mainPropertyNameList = [
+    'Display Type', 'Viewable Area', 'Overall Size', 'Insert Size', 'Poster Board Size',
+    'Interior Size', 'Menu Case Layout', 'Cork Board Frame Size', 'Letterboard Size', 'Corkboard Size',
+    'Panel Size', 'Helvetica Letter Sets', 'Graphic Insert', 'Dry Erase Board Size', 'Banner Stand', 'SignHolders',
+    'Display Width', 'Sidewalk Sign', 'Light Post Sign', 'Sign Panel' , 'Sign Stand', 'Easy Tack Board Size',
+    'Cork Bar Length', 'Post Options' , 'Poster Width', 'Clamps', 'Graphic Holders', 'Graphic Width',
+    'Fabric Graphic Size', 'Chalk Board Size', 'Reader Letter Sets', 'Message Panel Size', 'Wet Erase Board Size',
+    'Roman Letter Sets', 'Floor Stand', 'Style', 'Easel', 'Clamp Sign Stand', 'Counter Top Display', 'Marker Type', 'Sign Face',
+    'Letter Tracks', 'Additional Headers', 'Letter Set', 'Backing Board', 'Overall Sleeve Size', 'Overall Panel Size',
+    'Poster (Insert) Size', 'Finish', 'Portable Pole Sign', 'Marker Board Size', 'Header Panel', 'Brochure Holder',
+    'Newspaper Name', 'Newspaper Size', 'Wall Bracket', 'Moulding Display', 'Poster Size', 'Base Width',
+    'Tabletop Sign Stand', 'Pole/Base', 'Elliptical Stand', 'Banner Size', 'Magnetic Mount', 'Catalog Holders', 'Plastic Lenses'
+  ]
   
   var mainAttribCats = await attribCatCollection.find({SiteID: 1, AttrCategory: {$in: mainPropertyNameList}}).toArray()
   var mainPropertyIDList = mainAttribCats.map(mainAttribCat => {
@@ -321,8 +332,19 @@ router.get("/localattributes", async (req, res, next) => {
   const localgroupattributesCollection = mydb.collection('localgroupattributes')
 // for local end
 
-  const mainPropertyNameString = "Display Type, Viewable Area, Overall Size, Insert Size, Poster Board Size, Interior Size, Menu Case Layout, Cork Board Frame Size, Letterboard Size, Corkboard Size, Panel Size, Helvetica Letter Sets, Graphic Insert, Dry Erase Board Size, Banner Stand, SignHolders, Display Width, Sidewalk Sign, Light Post Sign, Sign Panel , Sign Stand, Easy Tack Board Size, Cork Bar Length, Post Options , Poster Width, Clamps, Graphic Holders, Graphic Width, Fabric Graphic Size, Chalk Board Size, Reader Letter Sets, Message Panel Size, Wet Erase Board Size, Roman Letter Sets, Floor Stand, Style, Easel, Clamp Sign Stand, Counter Top Display, Marker Type, Sign Face, Letter Tracks, Additional Headers, Letter Set, Backing Board, Overall Sleeve Size, Overall Panel Size, Poster (Insert) Size, Finish, Portable Pole Sign, Marker Board Size, Header Panel, Brochure Holder, Newspaper Name, Newspaper Size, Wall Bracket, Moulding Display, Poster Size, Base Width, Tabletop Sign Stand, Pole/Base, Elliptical Stand, Banner Size, Magnetic Mount, Catalog Holders, Plastic Lenses"
-  const mainPropertyNameList = mainPropertyNameString.split(', ')
+  const mainPropertyNameList = [
+    'Display Type', 'Viewable Area', 'Overall Size', 'Insert Size', 'Poster Board Size',
+    'Interior Size', 'Menu Case Layout', 'Cork Board Frame Size', 'Letterboard Size', 'Corkboard Size',
+    'Panel Size', 'Helvetica Letter Sets', 'Graphic Insert', 'Dry Erase Board Size', 'Banner Stand', 'SignHolders',
+    'Display Width', 'Sidewalk Sign', 'Light Post Sign', 'Sign Panel' , 'Sign Stand', 'Easy Tack Board Size',
+    'Cork Bar Length', 'Post Options' , 'Poster Width', 'Clamps', 'Graphic Holders', 'Graphic Width',
+    'Fabric Graphic Size', 'Chalk Board Size', 'Reader Letter Sets', 'Message Panel Size', 'Wet Erase Board Size',
+    'Roman Letter Sets', 'Floor Stand', 'Style', 'Easel', 'Clamp Sign Stand', 'Counter Top Display', 'Marker Type', 'Sign Face',
+    'Letter Tracks', 'Additional Headers', 'Letter Set', 'Backing Board', 'Overall Sleeve Size', 'Overall Panel Size',
+    'Poster (Insert) Size', 'Finish', 'Portable Pole Sign', 'Marker Board Size', 'Header Panel', 'Brochure Holder',
+    'Newspaper Name', 'Newspaper Size', 'Wall Bracket', 'Moulding Display', 'Poster Size', 'Base Width',
+    'Tabletop Sign Stand', 'Pole/Base', 'Elliptical Stand', 'Banner Size', 'Magnetic Mount', 'Catalog Holders', 'Plastic Lenses'
+  ]
   
   var mainAttribCats = await attribCatCollection.find({SiteID: 1, AttrCategory: {$in: mainPropertyNameList}}).toArray()
   var mainPropertyIDList = mainAttribCats.map(mainAttribCat => {

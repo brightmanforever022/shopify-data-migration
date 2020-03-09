@@ -651,6 +651,7 @@ router.get('/createTestProduct', async (req, res, next) => {
 			// 'body_html': productBodyHtml,
 			// 'product_type': productType,
 			// 'published_at': publishedAt,
+			// template_suffix: 'group',
 			// 'metafields_global_title_tag': metafieldsGlobalTitleTag,
 			// 'metafields_global_description_tag': metafieldsGlobalDescriptionTag,
 			// 'vendor': vendorName,
