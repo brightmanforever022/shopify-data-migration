@@ -9,6 +9,7 @@ import collections from "./routes/collections"
 import products from "./routes/products"
 import dbupload from "./routes/db"
 import attributeupload from './routes/attributeupload'
+import dbmove from './routes/dbmove'
 
 import frommstomongo from "./routes/frommstomongo"
 
@@ -34,6 +35,7 @@ app.use("/products", products)
 app.use("/frommstomongo", frommstomongo)
 app.use("/dbupload", dbupload)
 app.use("/attributeupload", attributeupload)
+app.use("/dbmove", dbmove)
 
 //Home route
 app.get('/', (req, res) => {

@@ -7,6 +7,70 @@ require('dotenv').config()
 const mongoUrl = 'mongodb://localhost:27017'
 const dbName = 'display4sale'
 
+// Initialize variables for specifications tab
+const specialSectionTitleList = [
+	'General Info',
+	'Dimensions',
+	'Frame Info',
+	'Matboard Info',
+	'Post Info',
+	'Banner Stand Specifications',
+	'Cork Board Specifications',
+	'Dry / Wet Erase Board Specifications',
+	'Letter Board Specifications',
+	'Chalk Board Specifications',
+	'Easy-Tack Specifications',
+	'Menu Specifications',
+	'Multi-Panel / Art Bin Specifications'
+]
+const filterNameList = [
+	[
+		'Application Type', 'Brand', 'Carrying Case', 'Display Type', 'Features', 'Finishes', 'Header', 
+		'Hinge Location', 'Lighting', 'Literature (Brochure) Holders', 'Maximum Wind Resistance', 'Multi-Tiered', 
+		'Number of Advertisements to Display', 'Number of Doors', 'Number of Sides', 'Orientation', 'Placement Type', 
+		'Security Feature', 'Shelf Type', 'Telescopic Display', 'WeatherPlus Add-ons'
+	],
+	[
+		'Interior Depth', 'Maximum Insert Thickness', 'Overall Depth', 'Overall Height', 'Sizes', 'Newspaper Size', 'Menu Size'
+	],
+	[
+		'Corner Style', 'Frame Shape', 'Frame Style', 'Frame Type', 'Frame Width'
+	],
+	[
+		'Decorative Mat Border Included', 'Matboard Width'
+	],
+	[
+		'Base Style', 'Base Width'
+	],
+	[
+		'Banner Mounting Method', 'Banner Width', 'Number of Banners to Display', 'Purchase an Optional Banner'
+	],
+	[
+		'Fabric Over Cork', 'Forbo Cork Board Color', 'Painted Cork Colors', 'Vinyl Over Cork'
+	],
+	[
+		'Dry / Wet Erase Boards', 'Dry Erase Board Material'
+	],
+	[
+		'Letter / Character Set Type', 'Letter / Character Size', 'Letter / Character Style', 'Letter / Reader Set Color', 
+		'Letter Tracks', 'Letterboard Color', 'Letterboard Material'
+	],
+	[
+		'Chalk Board Color', 'Chalk Board Type'
+	],
+	[
+		'Easy-Tack Fabric'
+	],
+	[
+		'Menu Orientation', 'Number of Menus to Display'
+	],
+	[
+		'Art Bin Displaying Method', 'Art Bin Tray Levels', 'Number of Panels', 'Print Protector Backing Board', 
+		'Print Protector Border Color', 'Print Protector BorderType', 'Print Protector Overlay', 'Number of Rolled Posters'
+	]
+]
+
+
 const router = express.Router()
 const Shopify = require('shopify-api-node')
 const shopify = new Shopify({
@@ -199,6 +263,7 @@ router.get('/createTestProduct', async (req, res, next) => {
 	const productCollection = mydb.collection('products')
 	const subcatCollection = mydb.collection('productsubcat')
 	const seoCollection = mydb.collection('productseo')
+	const productImageCollection = mydb.collection('productimages')
 	const dropShippingCollection = mydb.collection('dropshipping')
 	const productfilterchoicesCollection = mydb.collection('productfilterchoices')
 	const filtersCollection = mydb.collection('filters')
@@ -212,68 +277,15 @@ router.get('/createTestProduct', async (req, res, next) => {
 	const chartColumnCollection = mydb.collection('chartcolumns')
 	const chartValueCollection = mydb.collection('chartvalues')
 
-	// Initialize variables for specifications tab
-	const specialSectionTitleList = [
-		'General Info',
-		'Dimensions',
-		'Frame Info',
-		'Matboard Info',
-		'Post Info',
-		'Banner Stand Specifications',
-		'Cork Board Specifications',
-		'Dry / Wet Erase Board Specifications',
-		'Letter Board Specifications',
-		'Chalk Board Specifications',
-		'Easy-Tack Specifications',
-		'Menu Specifications',
-		'Multi-Panel / Art Bin Specifications'
-	]
-	const filterNameList = [
-		[
-			'Application Type', 'Brand', 'Carrying Case', 'Display Type', 'Features', 'Finishes', 'Header', 
-			'Hinge Location', 'Lighting', 'Literature (Brochure) Holders', 'Maximum Wind Resistance', 'Multi-Tiered', 
-			'Number of Advertisements to Display', 'Number of Doors', 'Number of Sides', 'Orientation', 'Placement Type', 
-			'Security Feature', 'Shelf Type', 'Telescopic Display', 'WeatherPlus Add-ons'
-		],
-		[
-			'Interior Depth', 'Maximum Insert Thickness', 'Overall Depth', 'Overall Height', 'Sizes', 'Newspaper Size', 'Menu Size'
-		],
-		[
-			'Corner Style', 'Frame Shape', 'Frame Style', 'Frame Type', 'Frame Width'
-		],
-		[
-			'Decorative Mat Border Included', 'Matboard Width'
-		],
-		[
-			'Base Style', 'Base Width'
-		],
-		[
-			'Banner Mounting Method', 'Banner Width', 'Number of Banners to Display', 'Purchase an Optional Banner'
-		],
-		[
-			'Fabric Over Cork', 'Forbo Cork Board Color', 'Painted Cork Colors', 'Vinyl Over Cork'
-		],
-		[
-			'Dry / Wet Erase Boards', 'Dry Erase Board Material'
-		],
-		[
-			'Letter / Character Set Type', 'Letter / Character Size', 'Letter / Character Style', 'Letter / Reader Set Color', 
-			'Letter Tracks', 'Letterboard Color', 'Letterboard Material'
-		],
-		[
-			'Chalk Board Color', 'Chalk Board Type'
-		],
-		[
-			'Easy-Tack Fabric'
-		],
-		[
-			'Menu Orientation', 'Number of Menus to Display'
-		],
-		[
-			'Art Bin Displaying Method', 'Art Bin Tray Levels', 'Number of Panels', 'Print Protector Backing Board', 
-			'Print Protector Border Color', 'Print Protector BorderType', 'Print Protector Overlay', 'Number of Rolled Posters'
-		]
-	]
+	// Indexing collections
+	productImageCollection.createIndex({ ProductID: 1, SiteID: 1 })
+	subcatCollection.createIndex({ ProductID: 1, SiteID: 1 })
+	seoCollection.createIndex({ ProductID: 1, SiteID: 1 })
+	dropShippingCollection.createIndex({ DropShipID: 1 })
+	productfilterchoicesCollection.createIndex({ product_id: 1 })
+	filtersCollection.createIndex({ filter_id: 1 })
+	productquantityCollection.createIndex({ ProductID: 1, SiteID: 1 })
+	
 	// getting special section title list
 	let sectionTitleList1 = []
 	let sectionTitleList2 = []
@@ -395,38 +407,67 @@ router.get('/createTestProduct', async (req, res, next) => {
 		// ----------------end of product fields-----------------------
 
 		// ---------------start of product images----------------------
-
-		let images = [
-			{
-				position: 1,
+		const productImageList = await productImageCollection.find({
+			ProductID: productItem.ProductID,
+			SiteID: 1
+		}).toArray()
+		let productImageName = productItem.Image1.split('.')
+		productImageName = productImageName[0]
+		let imagePosition = 0
+		let images = []
+		if (productItem.Image1 != '') {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
 				src: 'https://displays4sale.com/i/p1/' + productItem.Image1,
 				alt: seoDetail[0].Image1Alt
-			},
-			{
-				position: 2,
+			})
+		}
+		if (productItem.Image2 != '') {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
 				src: 'https://displays4sale.com/i/p2/' + productItem.Image2,
 				alt: seoDetail[0].Image2Alt
-			},
-			{
-				position: 3,
+			})
+		}
+		if (productItem.Image3 != '') {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
 				src: 'https://displays4sale.com/i/p3/' + productItem.Image3,
 				alt: seoDetail[0].Image3Alt
-			},
-			{
-				position: 4,
+			})
+		}
+		if (productItem.Image4 != '') {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
 				src: 'https://displays4sale.com/i/p4/' + productItem.Image4,
 				alt: seoDetail[0].Image4Alt
-			},
-		]
+			})
+		}
 
+		productImageList.map(pi => {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
+				src: 'https://displays4sale.com/i/pl/' + productImageName + '-' + pi.ImageID + '.jpg',
+				alt: seoDetail[0].Image1Alt
+			})
+		})
+
+		console.log('-----------------', productItem.ProductID, '--------------')
+		console.log('images: ', images)
+		
 		// ----------------end of product images-----------------------
 
 		// ---------------start of product custom fields----------------------
 
 		let meta_qty_discounts = ''
 		const quantityList = await productquantityCollection.find({
-			SiteID: 1,
-			ProductID: productItem.ProductID
+			ProductID: productItem.ProductID,
+			SiteID: 1
 		}).toArray()
 		await asyncForEach1(quantityList, async (quantityItem) => {
 			const qty_discount = 'QTY ' + quantityItem.QuantityFrom + '-' + quantityItem.QuantityTo + ',' +
@@ -605,7 +646,8 @@ router.get('/createTestProduct', async (req, res, next) => {
 			}
 		})
 
-		const meta_warranty_returns = productItem.HasWarranty ? 'warranty' : ''
+		const meta_has_warranty = productItem.HasWarranty
+		const meta_warranty_content = productItem.WarrantyPopup
 
 		// getting string of sizechart
 		let sizechartString = ''
@@ -918,8 +960,14 @@ router.get('/createTestProduct', async (req, res, next) => {
 					namespace: 'shipping'
 				},
 				{
-					key: 'warranty_returns',
-					value: meta_warranty_returns,
+					key: 'has_warranty',
+					value: meta_has_warranty,
+					value_type: 'boolean',
+					namespace: 'warranty'
+				},
+				{
+					key: 'content',
+					value: meta_warranty_content,
 					value_type: 'string',
 					namespace: 'warranty'
 				}
@@ -927,6 +975,7 @@ router.get('/createTestProduct', async (req, res, next) => {
 		}
 		// console.log('------product data: ', meta_qty_discounts)
 		// console.log('------product data: ', sizechartString)
+		/*
 		try{
 			const onlineProductData = await shopify.product.create(productData)
 			productCollection.updateOne(
@@ -952,6 +1001,7 @@ router.get('/createTestProduct', async (req, res, next) => {
 				}
 			})
 		}
+		*/
 	})
 
 	res.render('home')
@@ -976,68 +1026,6 @@ router.get('/updatefields', async (req, res, next) => {
 	const chartColumnCollection = mydb.collection('chartcolumns')
 	const chartValueCollection = mydb.collection('chartvalues')
 
-	// Initialize variables for specifications tab
-	const specialSectionTitleList = [
-		'General Info',
-		'Dimensions',
-		'Frame Info',
-		'Matboard Info',
-		'Post Info',
-		'Banner Stand Specifications',
-		'Cork Board Specifications',
-		'Dry / Wet Erase Board Specifications',
-		'Letter Board Specifications',
-		'Chalk Board Specifications',
-		'Easy-Tack Specifications',
-		'Menu Specifications',
-		'Multi-Panel / Art Bin Specifications'
-	]
-	const filterNameList = [
-		[
-			'Application Type', 'Brand', 'Carrying Case', 'Display Type', 'Features', 'Finishes', 'Header', 
-			'Hinge Location', 'Lighting', 'Literature (Brochure) Holders', 'Maximum Wind Resistance', 'Multi-Tiered', 
-			'Number of Advertisements to Display', 'Number of Doors', 'Number of Sides', 'Orientation', 'Placement Type', 
-			'Security Feature', 'Shelf Type', 'Telescopic Display', 'WeatherPlus Add-ons'
-		],
-		[
-			'Interior Depth', 'Maximum Insert Thickness', 'Overall Depth', 'Overall Height', 'Sizes', 'Newspaper Size', 'Menu Size'
-		],
-		[
-			'Corner Style', 'Frame Shape', 'Frame Style', 'Frame Type', 'Frame Width'
-		],
-		[
-			'Decorative Mat Border Included', 'Matboard Width'
-		],
-		[
-			'Base Style', 'Base Width'
-		],
-		[
-			'Banner Mounting Method', 'Banner Width', 'Number of Banners to Display', 'Purchase an Optional Banner'
-		],
-		[
-			'Fabric Over Cork', 'Forbo Cork Board Color', 'Painted Cork Colors', 'Vinyl Over Cork'
-		],
-		[
-			'Dry / Wet Erase Boards', 'Dry Erase Board Material'
-		],
-		[
-			'Letter / Character Set Type', 'Letter / Character Size', 'Letter / Character Style', 'Letter / Reader Set Color', 
-			'Letter Tracks', 'Letterboard Color', 'Letterboard Material'
-		],
-		[
-			'Chalk Board Color', 'Chalk Board Type'
-		],
-		[
-			'Easy-Tack Fabric'
-		],
-		[
-			'Menu Orientation', 'Number of Menus to Display'
-		],
-		[
-			'Art Bin Displaying Method', 'Art Bin Tray Levels', 'Number of Panels', 'Print Protector Backing Board', 
-			'Print Protector Border Color', 'Print Protector BorderType', 'Print Protector Overlay', 'Number of Rolled Posters'
-		]
-	]
 	// getting special section title list
 	let sectionTitleList1 = []
 	let sectionTitleList2 = []
@@ -1369,7 +1357,8 @@ router.get('/updatefields', async (req, res, next) => {
 			}
 		})
 
-		const meta_warranty_returns = productItem.HasWarranty ? 'warranty' : ''
+		const meta_has_warranty = productItem.HasWarranty ? 'true' : 'false'
+		const meta_warranty_content = productItem.WarrantyPopup
 
 		// getting string of sizechart
 		let sizechartString = ''
@@ -1421,12 +1410,12 @@ router.get('/updatefields', async (req, res, next) => {
 			// 'tags': tagString,
 			// 'images': images,
 			// variants
-			'variants': [
-				{
-					'id': productItem.shopifyFirstVariantId,
-					'sku': productItem.ProductID.toUpperCase()
-				}
-			],
+			// 'variants': [
+			// 	{
+			// 		'id': productItem.shopifyFirstVariantId,
+			// 		'sku': productItem.ProductID.toUpperCase()
+			// 	}
+			// ],
 			// meta data
 			'metafields': [
 				// {
@@ -1693,9 +1682,15 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'base'
 				// },
+				{
+					key: 'has_warranty',
+					value: meta_has_warranty,
+					value_type: 'string',
+					namespace: 'warranty'
+				},
 				// {
-				// 	key: 'warranty_returns',
-				// 	value: meta_warranty_returns,
+				// 	key: 'content',
+				// 	value: meta_warranty_content,
 				// 	value_type: 'string',
 				// 	namespace: 'warranty'
 				// }
