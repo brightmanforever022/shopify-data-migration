@@ -116,10 +116,10 @@ router.get("/", async (req, res, next) => {
 
   // get product list
   const productList = await productCollection.find({
-    // ProductID: {
-    //   $in: testProductIDList
-    // },
-    ProductID: 'scm-1117p',
+    ProductID: {
+      $in: testProductIDList
+    },
+    // ProductID: 'scm-1117p',
     SiteID: 1
   }).project({
     ProductID: 1, SiteID: 1, template_id: 1
@@ -152,10 +152,7 @@ router.get("/", async (req, res, next) => {
     // get the list of attribute categoriy id related with this product
     let proAttributeCategoryIdList = attributeList.map(attr => attr.AttribCatID)
     const attribCatIDList = proAttributeCategoryIdList.filter((item, index) =>proAttributeCategoryIdList.indexOf(item) === index)
-    console.log('original category id list: ', proAttributeCategoryIdList)
-    console.log('attribute category id list: ', attribCatIDList)
-    console.log('product attribute id list: ', proAttributeIdList)
-
+    
     // get attribute cat list
     let attribCats = await attribcatCollection.find({
       AttribCatID: {$in: attribCatIDList},
@@ -168,9 +165,6 @@ router.get("/", async (req, res, next) => {
     }, {})
     const attribCatList = attribCatIDList.map(catId => attribCats[catId])
 
-    // console.log('attrib cat list: ', attribCatList)
-    // console.log('attribute list: ', attributeList)
-
     attribCatList.map(attribCat => {
       console.log('+', attribCat.AttrCategory)
       attributeList.map(attr => {
@@ -180,6 +174,38 @@ router.get("/", async (req, res, next) => {
       })
     })
     
+    let displayOrder = 0
+    await asyncForEach(attribCatList, async (attrCat) => {
+      displayOrder++
+      // const groupId = await insertGroup(attrCat.AttrCategory, productItem.template_id, displayOrder)
+      const groupId = await insertLocalGroup(localgroupCollection, attrCat.AttrCategory, productItem.template_id, displayOrder)
+      const groupAttrList = attributeList.filter(attr => attr.AttribCatID == attrCat.AttribCatID)
+      let uploadedAttributeList = []
+      await asyncForEach(groupAttrList, async (proAttr) => {
+        if(!uploadedAttributeList.includes(proAttr.AttributeID)) {
+          // const attributeId = await insertAttribute(localAttributeRelationCollection, proAttr)
+          const attributeId = await insertLocalAttribute(localAttributeCollection, proAttr, localAttributeRelationCollection)
+          uploadedAttributeList.push(proAttr.AttributeID)
+          const hideAttributeList = await hideAttributeCollection.find({
+            AttributeID: proAttr.AttributeID,
+            ProductID: productItem.ProductID,
+            SiteID: 1
+          }).toArray()
+          const hideAttributeIdList = hideAttributeList.map(ha => ha.HideAttributeID)
+          const tablerowOption = proAttr.AttributeCodeLine
+          const tablerowVendor = proAttr.MFGCodeLine
+          // const relationId = await insertRelation(
+          //   groupId, attributeId, hideAttributeIdList.join(','),
+          //   tablerowOption, tablerowVendor
+          // )
+          const relationId = await insertLocalRelation(
+            localRelationCollection,
+            groupId, attributeId, hideAttributeIdList.join(','),
+            tablerowOption, tablerowVendor
+          )
+        }
+      })
+    })
 
     // const testAttributes = await hideAttributeCollection.aggregate([
     //   {
@@ -229,76 +255,6 @@ router.get("/", async (req, res, next) => {
     //     }
     //   }
     // ]).sort({ _id: 1 }).toArray()
-
-    // console.log('######', productItem.ProductID)
-    // console.log('------------', attrCatList)
-    // let isFirstCat = 1
-    // attrCatList.forEach(attrcat => {
-    //   if (mainPropertyNameList.includes(attrcat.attrCatData.AttrCategory) && isFirstCat) {
-    //     console.log(attrcat.ProductID + ' : ' + attrcat.attrCatData.AttrCategory)
-    //     isFirstCat = 0
-    //   }
-    // })
-    
-    /*
-    let displayOrder = 0
-    await asyncForEach(attrCatList, async (attrCat) => {
-      displayOrder++
-      const groupId = await insertGroup(attrCat.attrCatData.AttrCategory, productItem.template_id, displayOrder)
-      // const groupId = await insertLocalGroup(localgroupCollection, attrCat.attrCatData.AttrCategory, productItem.template_id, displayOrder)
-      // console.log('---------------------------')
-      const groupAttributeList = await attributesCollection.aggregate([
-        {
-          $match: {
-            AttributeID: { $in: proAttributeIdList },
-            AttribCatID: attrCat.AttribCatID
-          }
-        },
-        {
-          $lookup: {
-            from: 'attributecodes',
-            localField: 'AttributeID',
-            foreignField: 'AttributeID',
-            as: 'attrCodeData'
-          }
-        },
-        {
-          $unwind: {
-            path: '$attrCodeData', preserveNullAndEmptyArrays: true
-          }
-        }
-      ]).toArray()
-      // console.log('---------------')
-      // console.log(groupAttributeList)
-      let uploadedAttributeList = []
-      await asyncForEach(groupAttributeList, async (proAttr) => {
-        if(!uploadedAttributeList.includes(proAttr.AttributeID)) {
-          const attributeId = await insertAttribute(localAttributeRelationCollection, proAttr)
-          uploadedAttributeList.push(proAttr.AttributeID)
-          // const attributeId = await insertLocalAttribute(localAttributeCollection, proAttr)
-          const hideAttributeList = await hideAttributeCollection.find({
-            AttributeID: proAttr.AttributeID,
-            ProductID: productItem.ProductID,
-            SiteID: 1
-          }).toArray()
-          const hideAttributeIdList = hideAttributeList.map(ha => ha.HideAttributeID)
-          // console.log('------------')
-          // console.log(hideAttributeList)
-          const tablerowOption = proAttr.attrCodeData ? proAttr.attrCodeData.AttributeCodeLine : ''
-          const tablerowVendor = proAttr.attrCodeData ? proAttr.attrCodeData.MFGCodeLine : ''
-          const relationId = await insertRelation(
-            groupId, attributeId, hideAttributeIdList.join(','),
-            tablerowOption, tablerowVendor
-          )
-          // const relationId = await insertLocalRelation(
-          //   localRelationCollection,
-          //   groupId, attributeId, hideAttributeIdList.join(','),
-          //   tablerowOption, tablerowVendor
-          // )
-        }
-      })
-    })
-    */
 
     // console.log('######', productItem.ProductID)
 
@@ -429,7 +385,7 @@ async function insertLocalGroup(collectionInstance, groupTitle, templateId, disp
   return (localgroupIndex - 1)
 }
 
-async function insertLocalAttribute(collectionInstance, attr) {
+async function insertLocalAttribute(collectionInstance, attr, localRelationInstance) {
   var attributeId = 0
 
   // Check if attribute already exists, no? then, upload
@@ -474,6 +430,10 @@ async function insertLocalAttribute(collectionInstance, attr) {
     attributeId = attributeFind[0].local_attribute_id
     // console.log('----attribute id: ', attributeId)
   }
+  await localRelationInstance.insertOne({
+    originId: attr.AttributeID,
+    newId: attributeId
+  })
   return attributeId
 }
 
