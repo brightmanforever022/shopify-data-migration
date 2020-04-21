@@ -78,6 +78,7 @@ router.get("/", async (req, res, next) => {
   const productCollection = mydb.collection('products')
   const productattributesCollection = mydb.collection('productattributes')
   const productattribcatCollection = mydb.collection('productattribcat')
+  const attribcatCollection = mydb.collection('attribcat')
   const attributesCollection = mydb.collection('attributes')
   const hideAttributeCollection = mydb.collection('hideattributes')
 
@@ -109,6 +110,7 @@ router.get("/", async (req, res, next) => {
   productCollection.createIndex({ ProductID: 1, SiteID: 1 })
   productattributesCollection.createIndex({ ProductID: 1, SiteID: 1})
   productattribcatCollection.createIndex({ ProductID: 1, SiteID: 1})
+  attribcatCollection.createIndex({AttribCatID: 1, SiteID: 1})
   attributesCollection.createIndex({ AttributeID: 1, AttribCatID: 1 })
   hideAttributeCollection.createIndex({ AttributeID: 1, ProductID: 1, SiteID: 1 })
 
@@ -117,14 +119,14 @@ router.get("/", async (req, res, next) => {
     // ProductID: {
     //   $in: testProductIDList
     // },
-    ProductID: 'LOREADHDH-2S-7248',
+    ProductID: 'scm-1117p',
     SiteID: 1
   }).project({
     ProductID: 1, SiteID: 1, template_id: 1
   }).toArray()
   
   await asyncForEach(productList, async (productItem) => {
-    // get all productattribute id list related each productItem
+    // get all attribute id list related each productItem
     const proAttributeList = await productattributesCollection.find({
       ProductID: productItem.ProductID,
       SiteID: 1
@@ -132,21 +134,53 @@ router.get("/", async (req, res, next) => {
       _id: 0, AttributeID: 1
     }).toArray()
     const proAttributeIdList = proAttributeList.map(proAttr => proAttr.AttributeID)
+
+    // get all attributes with the list of all attribute id
     
-    // for test
+    let attributes = await attributesCollection.find({
+      AttributeID: {
+        $in: proAttributeIdList
+      }
+    }).toArray()
+
+    attributes = attributes.reduce((acc, attr) => {
+      acc[attr.AttributeID] = attr
+      return acc
+    }, {})
+    const attributeList = proAttributeIdList.map(attrId => attributes[attrId])
+
+    // get the list of attribute categoriy id related with this product
+    let proAttributeCategoryIdList = attributeList.map(attr => attr.AttribCatID)
+    const attribCatIDList = proAttributeCategoryIdList.filter((item, index) =>proAttributeCategoryIdList.indexOf(item) === index)
+    console.log('original category id list: ', proAttributeCategoryIdList)
+    console.log('attribute category id list: ', attribCatIDList)
+    console.log('product attribute id list: ', proAttributeIdList)
+
+    // get attribute cat list
+    let attribCats = await attribcatCollection.find({
+      AttribCatID: {$in: attribCatIDList},
+      SiteID: 1,
+    }).toArray()
+
+    attribCats = attribCats.reduce(function(acc, cat) {
+      acc[cat.AttribCatID] = cat
+      return acc
+    }, {})
+    const attribCatList = attribCatIDList.map(catId => attribCats[catId])
+
+    // console.log('attrib cat list: ', attribCatList)
+    // console.log('attribute list: ', attributeList)
+
+    attribCatList.map(attribCat => {
+      console.log('+', attribCat.AttrCategory)
+      attributeList.map(attr => {
+        if (attr.AttribCatID == attribCat.AttribCatID) {
+          console.log('--', attr.Attribute)
+        }
+      })
+    })
     
-    // const attributesTest = await attributesCollection.find({
-    //   AttributeID: {
-    //     $in: proAttributeIdList
-    //   },
-    //   AttribCatID: '630'
-    // }).toArray()
-    // // console.log(attributesTest)
-    // attributesTest.map(attr => {
-    //   console.log('---', attr.Attribute)
-    // })
-    
-    
+
     // const testAttributes = await hideAttributeCollection.aggregate([
     //   {
     //     $match: {
@@ -174,30 +208,30 @@ router.get("/", async (req, res, next) => {
     
     
     // get the list of product attribute category (group)
-    const attrCatList = await productattribcatCollection.aggregate([
-      {
-        $match: {
-          ProductID: productItem.ProductID,
-          SiteID: 1
-        }
-      },
-      {
-        $lookup: {
-          from: 'attribcat',
-          localField: 'AttribCatID',
-          foreignField: 'AttribCatID',
-          as: 'attrCatData'
-        }
-      },
-      {
-        $unwind: {
-          path: '$attrCatData', preserveNullAndEmptyArrays: true
-        }
-      }
-    ]).sort({ _id: 1 }).toArray()
+    // const attrCatList = await productattribcatCollection.aggregate([
+    //   {
+    //     $match: {
+    //       ProductID: productItem.ProductID,
+    //       SiteID: 1
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: 'attribcat',
+    //       localField: 'AttribCatID',
+    //       foreignField: 'AttribCatID',
+    //       as: 'attrCatData'
+    //     }
+    //   },
+    //   {
+    //     $unwind: {
+    //       path: '$attrCatData', preserveNullAndEmptyArrays: true
+    //     }
+    //   }
+    // ]).sort({ _id: 1 }).toArray()
 
-    console.log('######', productItem.ProductID)
-    console.log('------------', attrCatList)
+    // console.log('######', productItem.ProductID)
+    // console.log('------------', attrCatList)
     // let isFirstCat = 1
     // attrCatList.forEach(attrcat => {
     //   if (mainPropertyNameList.includes(attrcat.attrCatData.AttrCategory) && isFirstCat) {

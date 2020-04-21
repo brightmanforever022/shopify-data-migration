@@ -1025,6 +1025,7 @@ router.get('/updatefields', async (req, res, next) => {
 	const chartRowCollection = mydb.collection('chartrows')
 	const chartColumnCollection = mydb.collection('chartcolumns')
 	const chartValueCollection = mydb.collection('chartvalues')
+	const productImageCollection = mydb.collection('productimages')
 
 	// getting special section title list
 	let sectionTitleList1 = []
@@ -1148,6 +1149,13 @@ router.get('/updatefields', async (req, res, next) => {
 
 		// ---------------start of product images----------------------
 
+		const productImageList = await productImageCollection.find({
+			ProductID: productItem.ProductID,
+			SiteID: 1
+		}).toArray()
+		let productImageName = productItem.Image1.split('.')
+		productImageName = productImageName[0]
+		let imagePosition = 4
 		let images = [
 			{
 				position: 1,
@@ -1170,6 +1178,15 @@ router.get('/updatefields', async (req, res, next) => {
 				alt: seoDetail[0].Image4Alt
 			},
 		]
+
+		productImageList.map(pi => {
+			imagePosition ++
+			images.push({
+				position: imagePosition,
+				src: 'https://displays4sale.com/i/pl/' + productImageName + '-' + pi.ImageID + '.jpg',
+				alt: seoDetail[0].Image1Alt
+			})
+		})
 
 		// ----------------end of product images-----------------------
 
@@ -1408,7 +1425,7 @@ router.get('/updatefields', async (req, res, next) => {
 			// 'metafields_global_description_tag': metafieldsGlobalDescriptionTag,
 			// 'vendor': vendorName,
 			// 'tags': tagString,
-			// 'images': images,
+			'images': images,
 			// variants
 			// 'variants': [
 			// 	{
@@ -1682,12 +1699,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'base'
 				// },
-				{
-					key: 'has_warranty',
-					value: meta_has_warranty,
-					value_type: 'string',
-					namespace: 'warranty'
-				},
+				// {
+				// 	key: 'has_warranty',
+				// 	value: meta_has_warranty,
+				// 	value_type: 'string',
+				// 	namespace: 'warranty'
+				// },
 				// {
 				// 	key: 'content',
 				// 	value: meta_warranty_content,
