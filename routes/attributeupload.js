@@ -87,12 +87,6 @@ router.get("/", async (req, res, next) => {
   const localAttributeRelationCollection = mydb.collection('local-dattribute-relation')
   const localRelationCollection = mydb.collection('local-drellations')
 
-  const testProductIDList = [
-    'tlbs', 'sfc', 'SBMW-SHELF8-2024', 'CBOECL-5050', 'TTR855',
-    'TKM514', 'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 'scm-1117p',
-    'lscl', 'abmc', 'sfwlbhl', 'fdg', 'sswf'
-  ]
-
   const mainPropertyNameList = [
     'Insert Size', 'Overall Size', 'Poster Board Size', 'Viewable Area', 'Poster Size',
     'Interior Size', 'Cork Board Frame Size', 'Letterboard Size', 'Corkboard Size', 'Overall Panel Size',
@@ -107,6 +101,12 @@ router.get("/", async (req, res, next) => {
     'Tabletop Sign Stand', 'Pole/Base', 'Elliptical Stand', 'Magnetic Mount', 'Catalog Holders', 'Plastic Lenses'
   ]
 
+  const testProductIDList = [
+    'tlbs', 'sfc', 'SBMW-SHELF8-2024', 'CBOECL-5050', 'TTR855',
+    'TKM514', 'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 'scm-1117p',
+    'lscl', 'abmc', 'sfwlbhl', 'fdg', 'sswf'
+  ]
+
   productCollection.createIndex({ ProductID: 1, SiteID: 1 })
   productattributesCollection.createIndex({ ProductID: 1, SiteID: 1})
   productattribcatCollection.createIndex({ ProductID: 1, SiteID: 1})
@@ -119,7 +119,7 @@ router.get("/", async (req, res, next) => {
     ProductID: {
       $in: testProductIDList
     },
-    // ProductID: 'scm-1117p',
+    // ProductID: 'sswf',
     SiteID: 1
   }).project({
     ProductID: 1, SiteID: 1, template_id: 1
@@ -132,8 +132,10 @@ router.get("/", async (req, res, next) => {
       SiteID: 1
     }).project({
       _id: 0, AttributeID: 1
-    }).toArray()
+    }).sort({'ProductAttributeID': 1}).toArray()
     const proAttributeIdList = proAttributeList.map(proAttr => proAttr.AttributeID)
+
+    // console.log('attribute id list: ', proAttributeIdList)
 
     // get all attributes with the list of all attribute id
     
@@ -165,6 +167,8 @@ router.get("/", async (req, res, next) => {
     }, {})
     const attribCatList = attribCatIDList.map(catId => attribCats[catId])
 
+    /*
+    console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%')
     attribCatList.map(attribCat => {
       console.log('+', attribCat.AttrCategory)
       attributeList.map(attr => {
@@ -173,7 +177,9 @@ router.get("/", async (req, res, next) => {
         }
       })
     })
+    */
     
+    // /*
     let displayOrder = 0
     await asyncForEach(attribCatList, async (attrCat) => {
       displayOrder++
@@ -206,6 +212,7 @@ router.get("/", async (req, res, next) => {
         }
       })
     })
+    // */
 
     // const testAttributes = await hideAttributeCollection.aggregate([
     //   {
