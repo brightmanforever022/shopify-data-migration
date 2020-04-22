@@ -271,6 +271,16 @@ router.get("/", async (req, res, next) => {
   
 })
 
+router.get('/tostore', async (req, res, next) => {
+  res.render('home')
+
+  // await groupUpload()
+  // await attributeUpload()
+  await relationUpload()
+
+  console.log('end of uploading with group, attribute and relation')
+})
+
 async function insertGroup(groupTitle, templateId, displayOrder) {
   const d = new Date()
   var groupUploadQueryText = `INSERT INTO groups(
@@ -455,6 +465,195 @@ async function insertLocalRelation(collectionInstance, groupId, attributeId, exc
   })
   localdrellationIndex ++
   return (localdrellationIndex - 1)
+}
+
+async function groupUpload() {
+  const uploadNumberSize = process.env.UPLOAD_NUMBER_SIZE
+
+  const client = await MongoClient.connect(mongoUrl)
+  const mydb = client.db(dbName)
+  const localgroupCollection = mydb.collection('local-groups')
+  
+  // group uploading
+  const groupList = await localgroupCollection.find({}, {_id: 0}).toArray()
+  const groupUploadTimes = (groupList.length % uploadNumberSize) == 0 ? parseInt(groupList.length / uploadNumberSize) : parseInt(groupList.length / uploadNumberSize) + 1
+  const groupArray = [...Array(groupUploadTimes).keys()]
+  const initialGroupQuery = "INSERT INTO public.groups(id, label, display_order, created_at, updated_at, template_id) VALUES"
+  await asyncForEach(groupArray, async (groupItem, index) => {
+    let additionalGroupQuery = ""
+    const d = "2020-04-22T17:14:54.824+00:00"
+    if (index == (groupUploadTimes - 1)) {
+      const blockLength = groupList.length - uploadNumberSize * index
+      for (let itemIndex = 0; itemIndex < blockLength; itemIndex++) {
+        const groupElement = groupList[groupItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (blockLength - 1)) {
+          additionalGroupQuery += "(" + parseInt(groupElement.local_group_id) + ",'" + groupElement.label + "',"
+                               + groupElement.display_order + ",'" + d + "','"
+                               + d + "'," + groupElement.template_id + "), "
+        } else {
+          additionalGroupQuery += "(" + parseInt(groupElement.local_group_id) + ",'" + groupElement.label + "',"
+                               + groupElement.display_order + ",'" + d + "','"
+                               + d + "'," + groupElement.template_id + ")"
+        }
+      }
+      await pgClient.query(initialGroupQuery + additionalGroupQuery)
+    } else {
+      for (let itemIndex = 0; itemIndex < uploadNumberSize; itemIndex++) {
+        const groupElement = groupList[groupItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (uploadNumberSize - 1)) {
+          additionalGroupQuery += "(" + parseInt(groupElement.local_group_id) + ",'" + groupElement.label + "',"
+                               + groupElement.display_order + ",'" + d + "','"
+                               + d + "'," + groupElement.template_id + "), "
+        } else {
+          additionalGroupQuery += "(" + parseInt(groupElement.local_group_id) + ",'" + groupElement.label + "',"
+                               + groupElement.display_order + ",'" + d + "','"
+                               + d + "'," + groupElement.template_id + ")"
+        }
+      }
+      await pgClient.query(initialGroupQuery + additionalGroupQuery)
+    }
+
+    console.log('group uploaded: ', (index + 1) + ' of ' + groupUploadTimes)
+  })
+  console.log('end uploading of group')
+  return true
+}
+
+async function attributeUpload() {
+  const uploadNumberSize = process.env.UPLOAD_NUMBER_SIZE
+
+  const client = await MongoClient.connect(mongoUrl)
+  const mydb = client.db(dbName)
+  const localAttributeCollection = mydb.collection('local-dattributes')
+  
+  // attribute uploading
+  const attributeList = await localAttributeCollection.find({}, {_id: 0}).toArray()
+  const attributeUploadTimes = (attributeList.length % uploadNumberSize) == 0 ? parseInt(attributeList.length / uploadNumberSize) : parseInt(attributeList.length / uploadNumberSize) + 1
+  const attributeArray = [...Array(attributeUploadTimes).keys()]
+  const initialAttributeQuery = "INSERT INTO public.dattributes(id, label, price, price_type, weight, width, "
+                                + "length, girth, attribute_code, postal_code, store_list, vendor_sku, width2, "
+                                + "length2, girth2, width3, length3, girth3, weight2, weight3, freight, "
+                                + "min_ship_quantity, max_ship_quantity, ship_price_percent) VALUES"
+  await asyncForEach(attributeArray, async (attributeItem, index) => {
+    let additionalAttributeQuery = ""
+    if (index == (attributeUploadTimes - 1)) {
+      const blockLength = attributeList.length - uploadNumberSize * index
+      for (let itemIndex = 0; itemIndex < blockLength; itemIndex++) {
+        const attributeElement = attributeList[attributeItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (blockLength - 1)) {
+          additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
+                               + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
+                               + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
+                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
+                               + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
+                               + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
+                               + attributeElement.freight + "," + attributeElement.min_ship_quantity + ","
+                               + attributeElement.max_ship_quantity + "," + attributeElement.ship_price_percent + "), "
+        } else {
+          additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
+                               + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
+                               + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
+                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
+                               + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
+                               + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
+                               + attributeElement.freight + "," + attributeElement.min_ship_quantity + ","
+                               + attributeElement.max_ship_quantity + "," + attributeElement.ship_price_percent + ")"
+        }
+      }
+      await pgClient.query(initialAttributeQuery + additionalAttributeQuery)
+    } else {
+      for (let itemIndex = 0; itemIndex < uploadNumberSize; itemIndex++) {
+        const attributeElement = attributeList[attributeItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (uploadNumberSize - 1)) {
+          additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
+                               + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
+                               + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
+                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
+                               + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
+                               + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
+                               + attributeElement.freight + "," + attributeElement.min_ship_quantity + ","
+                               + attributeElement.max_ship_quantity + "," + attributeElement.ship_price_percent + "), "
+        } else {
+          additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
+                               + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
+                               + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
+                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
+                               + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
+                               + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
+                               + attributeElement.freight + "," + attributeElement.min_ship_quantity + ","
+                               + attributeElement.max_ship_quantity + "," + attributeElement.ship_price_percent + ")"
+        }
+      }
+      await pgClient.query(initialAttributeQuery + additionalAttributeQuery)
+    }
+
+    console.log('attribute uploaded: ', (index + 1) + ' of ' + attributeUploadTimes)
+  })
+  console.log('end uploading of attribute')
+  return true
+}
+
+async function relationUpload() {
+  const uploadNumberSize = process.env.UPLOAD_NUMBER_SIZE
+
+  const client = await MongoClient.connect(mongoUrl)
+  const mydb = client.db(dbName)
+  const localRelationCollection = mydb.collection('local-drellations')
+
+  // relation uploading
+  const relationList = await localRelationCollection.find({}, {_id: 0}).toArray()
+  const relationUploadTimes = (relationList.length % uploadNumberSize) == 0 ? parseInt(relationList.length / uploadNumberSize) : parseInt(relationList.length / uploadNumberSize) + 1
+  const relationArray = [...Array(relationUploadTimes).keys()]
+  const initialRelationQuery = "INSERT INTO public.drellations(id, group_id, dattribute_id, excepts, table_row_option, table_row_vendor) VALUES"
+  await asyncForEach(relationArray, async (relationItem, index) => {
+    let additionalRelationQuery = ""
+    if (index == (relationUploadTimes - 1)) {
+      const blockLength = relationList.length - uploadNumberSize * index
+      for (let itemIndex = 0; itemIndex < blockLength; itemIndex++) {
+        const relationElement = relationList[relationItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (blockLength - 1)) {
+          additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
+                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + "), "
+        } else {
+          additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
+                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + ")"
+        }
+      }
+      await pgClient.query(initialRelationQuery + additionalRelationQuery)
+    } else {
+      for (let itemIndex = 0; itemIndex < uploadNumberSize; itemIndex++) {
+        const relationElement = relationList[relationItem * uploadNumberSize + itemIndex]
+        if (itemIndex < (uploadNumberSize - 1)) {
+          additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
+                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + "), "
+        } else {
+          additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
+                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + ")"
+        }
+      }
+      await pgClient.query(initialRelationQuery + additionalRelationQuery)
+    }
+
+    await sleep(200)
+
+    console.log('relation uploaded: ', (index + 1) + ' of ' + relationUploadTimes)
+  })
+  console.log('end uploading of relation')
+  return true
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 
