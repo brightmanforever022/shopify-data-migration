@@ -12,63 +12,42 @@ try {
   console.log(error)
 }
 
+const vendorList = [
+  { name: 'United MFRS. Supplies, Inc.', zipcode: '11520'}, { name: 'TENSATOR', zipcode: '11706'},
+  { name: 'CAB-network', zipcode: '11520'}, { name: 'United Visual Products, Inc.', zipcode: '53207'},
+  { name: 'Don Mar Frame & Moulding', zipcode: '11520'}, { name: 'Studio Moulding Inc.', zipcode: '11520'},
+  { name: 'Delta Lock Company', zipcode: '11520'}, { name: 'MDI Worldwide', zipcode: '48331'},
+  { name: 'Pinquist Tool & Die Co., Inc.', zipcode: '13440'}, { name: 'Stylmark', zipcode: '55432'},
+  { name: 'Alpina Manufacturing, LLC', zipcode: '11520'}, { name: 'Alpina Manufacturing, LLC', zipcode: '11520'},
+  { name: 'Jack Sayers Products Ltd', zipcode: '11520'}, { name: 'J & J Display', zipcode: '19973'},
+  { name: 'The Miller Group', zipcode: '63026'}, { name: 'Presentation Systems', zipcode: '94801'},
+  { name: 'Carmanah Signs', zipcode: '98230'}, { name: 'DSA/Phototech, Inc.', zipcode: '90746'},
+  { name: 'Mark Bric Display Corp.', zipcode: '23875'}, { name: 'Decor Moulding & Supply', zipcode: '11520'},
+  { name: 'SwingFrame Manufacturing', zipcode: '11520'}, { name: 'True Textiles', zipcode: '11520'},
+  { name: 'WL Concept', zipcode: '11520'}, { name: 'Nielsen & Bainbridge', zipcode: '11520'},
+  { name: "Itt's Industrial", zipcode: '11520'}, { name: 'Alto Mfg. Co., Inc.', zipcode: '60657'},
+  { name: 'Orbus Company', zipcode: '60440'}, { name: 'M.F. Blouin Merchandising', zipcode: '03869'},
+  { name: 'Global Glass Corp.', zipcode: '11801'}, { name: 'Marino Custom Display Co.', zipcode: '01983'},
+  { name: 'VKF Renzel USA Corp', zipcode: '60007'}, { name: 'Fiber Char Corp.', zipcode: '11520'},
+  { name: 'Testrite Instrument Co., Inc.', zipcode: '07601'}, { name: 'Visiontron Corp', zipcode: '11788'},
+  { name: 'Display Fixture Warehouse', zipcode: '30336'}, { name: 'HMC Display', zipcode: '93637'},
+  { name: 'Joseph Struhl Company, Inc.', zipcode: '11040'}, { name: 'Hollywood Banners', zipcode: '11726'},
+  { name: 'CUSTOM PRODUCT', zipcode: '11520'}, { name: 'MT Displays LLC', zipcode: '18706'},
+  { name: 'Glaro Incorporated', zipcode: '11788'}, { name: 'Accessories', zipcode: '11520'},
+  { name: 'Kirby Built Products', zipcode: '53151'}, { name: 'Forbes Industries', zipcode: '91761'},
+  { name: 'Windigo Signs', zipcode: '85281'}, { name: 'Britten', zipcode: '49685'},
+  { name: 'Displays 2 Go', zipcode: '02809'}, { name: 'Ghent', zipcode: '45036'},
+  { name: 'Marvolus Manufacturing', zipcode: '60612'}, { name: 'Queue Solutions', zipcode: '11716'},
+  { name: 'SignTech Co., Ltd', zipcode: '11520'}, { name: 'South Beach Media, Inc.', zipcode: '92708'},
+]
 const mongoUrl = 'mongodb://localhost:27017'
 const dbName = 'display4sale'
 
 const router = express.Router()
-const Shopify = require('shopify-api-node')
-const shopify = new Shopify({
-  shopName: process.env.shop_name,
-  apiKey: process.env.shop_api_key,
-  password: process.env.shop_api_password,
-  timeout: 50000,
-  autoLimit: {
-    calls: 2,
-    interval: 1000,
-    bucketSize: 35
-  }
-})
 
 let localdattributeIndex = 2
 let localdrellationIndex = 2
 let localgroupIndex = 2
-
-router.get('/updateHideAttributes', async (req, res, next) => {
-  res.render('home')
-  const client = await MongoClient.connect(mongoUrl)
-  const mydb = client.db(dbName)
-  const hideRelationCollection = mydb.collection('local-dattribute-relation')
-  var hideRelationFindQueryText = `SELECT id, excepts FROM drellations`
-
-  await pgClient
-    .query(hideRelationFindQueryText)
-    .then(async (relationFindRes) => {
-      await asyncForEach(relationFindRes.rows, async (dr) => {
-        if (dr.excepts != '') {
-          // console.log(dr)
-          const exceptIdList = dr.excepts.split(',')
-          let exceptNewIdList = await hideRelationCollection.find({
-            originId: {
-              $in: exceptIdList
-            }
-          }).project({
-            newId: 1
-          }).toArray()
-          exceptNewIdList = exceptNewIdList.map(exItem => exItem.newId)
-          const uniqueIdList = exceptNewIdList.filter((elem, pos) => {
-            return exceptNewIdList.indexOf(elem) == pos
-          })
-          var relationUpdateQueryText = `UPDATE drellations 
-                                SET excepts=$1 WHERE id=$2`
-
-          var relationUpdateValues = [uniqueIdList.join(','), dr.id]
-          await pgClient.query(relationUpdateQueryText, relationUpdateValues)
-          // process.exit()
-        }
-      })
-      console.log('update relation excepts end')
-    })
-})
 
 router.get("/", async (req, res, next) => {
   res.render('home')
@@ -77,15 +56,27 @@ router.get("/", async (req, res, next) => {
   const mydb = client.db(dbName)
   const productCollection = mydb.collection('products')
   const productattributesCollection = mydb.collection('productattributes')
-  const productattribcatCollection = mydb.collection('productattribcat')
   const attribcatCollection = mydb.collection('attribcat')
   const attributesCollection = mydb.collection('attributes')
+  const attributecodesCollection = mydb.collection('attributecodes')
+  const mastercodesCollection = mydb.collection('mastercodes')
+  const vendorsCollection = mydb.collection('vendors')
   const hideAttributeCollection = mydb.collection('hideattributes')
 
+  productCollection.createIndex({ ProductID: 1, SiteID: 1 })
+  productattributesCollection.createIndex({ ProductID: 1, SiteID: 1})
+  attribcatCollection.createIndex({AttribCatID: 1, SiteID: 1})
+  attributesCollection.createIndex({ AttributeID: 1, AttribCatID: 1 })
+  attributecodesCollection.createIndex({ AttributeID: 1 })
+  mastercodesCollection.createIndex({ CodeID: 1 })
+  vendorsCollection.createIndex({ VendorID: 1 })
+  hideAttributeCollection.createIndex({ AttributeID: 1, ProductID: 1, SiteID: 1 })
+  
   const localgroupCollection = mydb.collection('local-groups')
   const localAttributeCollection = mydb.collection('local-dattributes')
   const localAttributeRelationCollection = mydb.collection('local-dattribute-relation')
   const localRelationCollection = mydb.collection('local-drellations')
+
 
   const mainPropertyNameList = [
     'Insert Size', 'Overall Size', 'Poster Board Size', 'Viewable Area', 'Poster Size',
@@ -106,13 +97,6 @@ router.get("/", async (req, res, next) => {
     'TKM514', 'SBMWIDE4-LED', 'LOREADHDH-2S-7248', 'scm-1117p',
     'lscl', 'abmc', 'sfwlbhl', 'fdg', 'sswf'
   ]
-
-  productCollection.createIndex({ ProductID: 1, SiteID: 1 })
-  productattributesCollection.createIndex({ ProductID: 1, SiteID: 1})
-  productattribcatCollection.createIndex({ ProductID: 1, SiteID: 1})
-  attribcatCollection.createIndex({AttribCatID: 1, SiteID: 1})
-  attributesCollection.createIndex({ AttributeID: 1, AttribCatID: 1 })
-  hideAttributeCollection.createIndex({ AttributeID: 1, ProductID: 1, SiteID: 1 })
 
   // get product list
   const productList = await productCollection.find({
@@ -135,10 +119,7 @@ router.get("/", async (req, res, next) => {
     }).sort({'ProductAttributeID': 1}).toArray()
     const proAttributeIdList = proAttributeList.map(proAttr => proAttr.AttributeID)
 
-    // console.log('attribute id list: ', proAttributeIdList)
-
     // get all attributes with the list of all attribute id
-    
     let attributes = await attributesCollection.find({
       AttributeID: {
         $in: proAttributeIdList
@@ -170,14 +151,23 @@ router.get("/", async (req, res, next) => {
     /*
     console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%')
     attribCatList.map(attribCat => {
-      console.log('+', attribCat.AttrCategory)
-      attributeList.map(attr => {
+      console.log('++', attribCat.AttrCategory)
+      attributeList.map(async (attr) => {
         if (attr.AttribCatID == attribCat.AttribCatID) {
-          console.log('--', attr.Attribute)
+          console.log('++', attr.Attribute, attr.AttributeID)
         }
       })
     })
     */
+    // const newAttr = await getNewAttr(
+    //   {
+    //     AttributeID:"288593",        
+    //     Price: 658,
+    //   },
+    //   attributecodesCollection, mastercodesCollection, vendorsCollection
+    // )
+    // console.log('new attribute: ', newAttr)
+    // process.exit()
     
     // /*
     let displayOrder = 0
@@ -190,7 +180,8 @@ router.get("/", async (req, res, next) => {
       await asyncForEach(groupAttrList, async (proAttr) => {
         if(!uploadedAttributeList.includes(proAttr.AttributeID)) {
           // const attributeId = await insertAttribute(localAttributeRelationCollection, proAttr)
-          const attributeId = await insertLocalAttribute(localAttributeCollection, proAttr, localAttributeRelationCollection)
+          const newAttr = await getNewAttr(proAttr, attributecodesCollection, mastercodesCollection, vendorsCollection)
+          const attributeId = await insertLocalAttribute(localAttributeCollection, newAttr, localAttributeRelationCollection)
           uploadedAttributeList.push(proAttr.AttributeID)
           const hideAttributeList = await hideAttributeCollection.find({
             AttributeID: proAttr.AttributeID,
@@ -198,8 +189,8 @@ router.get("/", async (req, res, next) => {
             SiteID: 1
           }).toArray()
           const hideAttributeIdList = hideAttributeList.map(ha => ha.HideAttributeID)
-          const tablerowOption = proAttr.AttributeCodeLine
-          const tablerowVendor = proAttr.MFGCodeLine
+          const tablerowOption = newAttr.TableOption
+          const tablerowVendor = newAttr.TableVendor
           // const relationId = await insertRelation(
           //   groupId, attributeId, hideAttributeIdList.join(','),
           //   tablerowOption, tablerowVendor
@@ -212,178 +203,96 @@ router.get("/", async (req, res, next) => {
         }
       })
     })
-    // */
-
-    // const testAttributes = await hideAttributeCollection.aggregate([
-    //   {
-    //     $match: {
-    //       AttributeID: '425649',
-    //       ProductID: 'tlbs',
-    //       SiteID: 1
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'attributes',
-    //       localField: 'HideAttributeID',
-    //       foreignField: 'AttributeID',
-    //       as: 'HideAttrData'
-    //     }
-    //   },
-    //   {
-    //     $unwind: {
-    //       path: '$HideAttrData', preserveNullAndEmptyArrays: true
-    //     }
-    //   }
-    // ]).toArray()
-
-    // console.log('-----------', testAttributes)
-    
-    
-    // get the list of product attribute category (group)
-    // const attrCatList = await productattribcatCollection.aggregate([
-    //   {
-    //     $match: {
-    //       ProductID: productItem.ProductID,
-    //       SiteID: 1
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'attribcat',
-    //       localField: 'AttribCatID',
-    //       foreignField: 'AttribCatID',
-    //       as: 'attrCatData'
-    //     }
-    //   },
-    //   {
-    //     $unwind: {
-    //       path: '$attrCatData', preserveNullAndEmptyArrays: true
-    //     }
-    //   }
-    // ]).sort({ _id: 1 }).toArray()
-
-    // console.log('######', productItem.ProductID)
-
   })
 
-  console.log('upload end')
-  
+  console.log('generation end')
+  await updateHiddenAttributes()
+  console.log('except updating end. Please upload to the db of online store.')
 })
 
 router.get('/tostore', async (req, res, next) => {
   res.render('home')
 
-  // await groupUpload()
-  // await attributeUpload()
+  await groupUpload()
+  await attributeUpload()
   await relationUpload()
 
   console.log('end of uploading with group, attribute and relation')
 })
 
-async function insertGroup(groupTitle, templateId, displayOrder) {
-  const d = new Date()
-  var groupUploadQueryText = `INSERT INTO groups(
-    label, display_order,
-    created_at, updated_at,
-    template_id
-  ) VALUES(
-    $1, $2, $3, $4, $5
-  ) 
-  RETURNING id`
-  var groupUploadValues = [
-    groupTitle, displayOrder,
-    d, d,
-    parseInt(templateId)
-  ]
 
-  const groupUploadResponse = await pgClient.query(groupUploadQueryText, groupUploadValues)
-
-  return groupUploadResponse.rows[0].id
-}
-
-async function insertAttribute(attrInstance, attr) {
-  var attributeId = 0
-
-  // Check if attribute already exists, no? then, upload
-  var attributeFindQueryText = `SELECT id, label FROM dattributes 
-                                WHERE label=$1::text AND price=$2 
-                                  AND price_type=$3 AND attribute_code=$4 AND vendor_sku=$5`
-
-  var attributeFindValues = [
-                              attr.Attribute.trim(), attr.Price, 
-                              attr.PriceType, attr.AttributeCode.trim(), attr.MFGCode.trim()
-                            ]
-  
-  await pgClient
-    .query(attributeFindQueryText, attributeFindValues)
-    .then(async (attributeFindRes) => {
-      if (attributeFindRes.rowCount == 0) { // Upload new attribute
-        // console.log('insert: ', attr.Attribute)
-        var attributeUploadQueryText = `INSERT INTO dattributes(
-            label, price, price_type,
-            weight, width, length,
-            girth, attribute_code, store_list, weight2,
-            width2, length2, girth2,
-            weight3, width3, length3,
-            girth3, freight, min_ship_quantity,
-            max_ship_quantity, ship_price_percent, vendor_sku
-          ) VALUES(
-            $1, $2, $3, $4, $5, $6, $7,
-            $8, $9, $10, $11, $12, $13, $14,
-            $15, $16, $17, $18, $19, $20, $21,
-            $22
-          ) 
-          RETURNING id`
-        var attributeUploadValues = [
-          attr.Attribute.trim(), attr.Price, attr.PriceType,
-          attr.Weight, attr.Width, attr.Length,
-          attr.Girth, attr.AttributeCode.trim(), 'displays4sale.myshopify.com', attr.Weight2,
-          attr.Width2, attr.Length2, attr.Girth2,
-          attr.Weight3, attr.Width3, attr.Length3,
-          attr.Girth3, attr.Freight, attr.MinQuantityShip,
-          attr.MaxQuantityShip, attr.ShipPricePercent, attr.MFGCode.trim()
-        ]
-
-        await pgClient
-          .query(attributeUploadQueryText, attributeUploadValues)
-          .then(attributeUploadRes => {
-            attributeId = attributeUploadRes.rows[0].id
-            console.log('++++++ attribute id: ', attributeUploadRes.rows[0].id)
-          })
-      } else { // This attribute already exists
-        attributeId = attributeFindRes.rows[0].id
-        console.log('----attribute id: ', attributeId)
+// Get new attribute data
+async function getNewAttr(attr, attributecodesCollection, mastercodesCollection, vendorsCollection) {
+  const attributeCodeList = await attributecodesCollection.aggregate([
+    {
+      $match: {
+        AttributeID: attr.AttributeID
       }
-      await attrInstance.insertOne({
-        originId: attr.AttributeID,
-        newId: attributeId
-      })
+    },
+    {
+      $lookup: {
+        from: 'mastercodes',
+        localField: 'CodeID',
+        foreignField: 'CodeID',
+        as: 'mastercodeData'
+      }
+    },
+    {
+      $unwind: {
+        path: '$mastercodeData', preserveNullAndEmptyArrays: true
+      }
+    }
+  ]).sort({AttributeCodeLine: 1, MFGCodeLine: 1}).toArray()
+  
+  const codeList1 = attributeCodeList.filter(ac => ac.AttributeCodeLine > 0).map(item => item.mastercodeData.AttributeCode)
+  const tableOption = attributeCodeList.filter(ac => ac.AttributeCodeLine > 0).map(item => item.AttributeCodeLine)
+  const codeList2 = attributeCodeList.filter(ac => ac.MFGCodeLine > 0).map(item => item.mastercodeData.MFGCode)
+  const tableVendor = attributeCodeList.filter(ac => ac.MFGCodeLine > 0).map(item => item.MFGCodeLine)
+
+  // get postal code
+  const firstAttributeCode = await attributecodesCollection.aggregate([
+    {
+      $match: {
+        AttributeID: attr.AttributeID
+      }
+    },
+    {
+      $lookup: {
+        from: 'mastercodes',
+        localField: 'CodeID',
+        foreignField: 'CodeID',
+        as: 'mastercodeData'
+      }
+    },
+    {
+      $unwind: {
+        path: '$mastercodeData', preserveNullAndEmptyArrays: true
+      }
+    }
+  ]).limit(1).toArray()
+
+  let zipCode = ''
+  let vendorID = 0
+  if (firstAttributeCode.length > 0) {
+    vendorID = firstAttributeCode[0].mastercodeData.VendorID
+    const vendors = await vendorsCollection.find({
+      VendorID: vendorID
+    }).toArray()
+    vendorList.map(vl => {
+      if(vl.name == vendors[0].VendorName) {
+        zipCode = vl.zipcode
+      }
     })
-
-  return attributeId
-}
-
-async function insertRelation(groupId, attributeId, excepts, tablerowOption, tablerowVendor) {
-  var relationUploadQueryText = `INSERT INTO drellations(
-    group_id, dattribute_id, excepts, table_row_option, table_row_vendor
-  ) VALUES(
-    $1, $2, $3, $4, $5
-  ) 
-  RETURNING id`
-  var relationUploadValues = [
-    groupId, attributeId, excepts, tablerowOption, tablerowVendor
-  ]
-
-  const relationUploadResponse = await pgClient.query(relationUploadQueryText, relationUploadValues)
-
-  return relationUploadResponse.rows[0].id
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
   }
+  
+  return Object.assign(attr, {
+    AttributeSku: codeList1.join(','),
+    VendorSku: codeList2.join(','),
+    TableOption: tableOption.join(','),
+    TableVendor: tableVendor.join(','),
+    VendorID: vendorID,
+    ZipCode: zipCode,
+  })
 }
 
 // For local
@@ -410,8 +319,8 @@ async function insertLocalAttribute(collectionInstance, attr, localRelationInsta
     label: attr.Attribute.trim(),
     price: attr.Price,
     price_type: attr.PriceType,
-    attribute_code: attr.AttributeCode.trim(),
-    vendor_sku: attr.MFGCode.trim()
+    attribute_sku: attr.AttributeSku,
+    vendor_sku: attr.VendorSku,
   }).toArray()
   
   if (attributeFind.length == 0) { // Upload new attribute
@@ -438,7 +347,9 @@ async function insertLocalAttribute(collectionInstance, attr, localRelationInsta
       min_ship_quantity: attr.MinQuantityShip,
       max_ship_quantity: attr.MaxQuantityShip,
       ship_price_percent: attr.ShipPricePercent,
-      vendor_sku: attr.MFGCode.trim()
+      attribute_sku: attr.AttributeSku,
+      vendor_sku: attr.VendorSku,
+      zip_code: attr.ZipCode,
     })
     attributeId = localdattributeIndex
     localdattributeIndex ++
@@ -544,7 +455,7 @@ async function attributeUpload() {
           additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
                                + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
                                + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
-                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.attribute_sku + "','" + attributeElement.zip_code + "','" + attributeElement.store_list + "','"
                                + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
                                + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
                                + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
@@ -554,7 +465,7 @@ async function attributeUpload() {
           additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
                                + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
                                + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
-                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.attribute_sku + "','" + attributeElement.zip_code + "','" + attributeElement.store_list + "','"
                                + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
                                + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
                                + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
@@ -570,7 +481,7 @@ async function attributeUpload() {
           additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
                                + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
                                + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
-                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.attribute_sku + "','" + attributeElement.zip_code + "','" + attributeElement.store_list + "','"
                                + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
                                + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
                                + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
@@ -580,7 +491,7 @@ async function attributeUpload() {
           additionalAttributeQuery += "(" + parseInt(attributeElement.local_attribute_id) + ",'" + attributeElement.label + "',"
                                + attributeElement.price + "," + attributeElement.price_type + "," + attributeElement.weight + ","
                                + attributeElement.width + "," + attributeElement.length + "," + attributeElement.girth + ",'"
-                               + attributeElement.attribute_code + "','" + "12345','" + attributeElement.store_list + "','"
+                               + attributeElement.attribute_sku + "','" + attributeElement.zip_code + "','" + attributeElement.store_list + "','"
                                + attributeElement.vendor_sku + "'," + attributeElement.width2 + "," + attributeElement.length2 + ","
                                + attributeElement.girth2 + "," + attributeElement.width3 + "," + attributeElement.length3 + ","
                                + attributeElement.girth3 + "," + attributeElement.weight2 + "," + attributeElement.weight3 + ","
@@ -617,12 +528,12 @@ async function relationUpload() {
         const relationElement = relationList[relationItem * uploadNumberSize + itemIndex]
         if (itemIndex < (blockLength - 1)) {
           additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
-                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
-                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + "), "
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "','"
+                               + relationElement.table_row_option + "','" + relationElement.table_row_vendor + "'), "
         } else {
           additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
-                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
-                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + ")"
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "','"
+                               + relationElement.table_row_option + "','" + relationElement.table_row_vendor + "')"
         }
       }
       await pgClient.query(initialRelationQuery + additionalRelationQuery)
@@ -631,12 +542,12 @@ async function relationUpload() {
         const relationElement = relationList[relationItem * uploadNumberSize + itemIndex]
         if (itemIndex < (uploadNumberSize - 1)) {
           additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
-                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
-                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + "), "
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "','"
+                               + relationElement.table_row_option + "','" + relationElement.table_row_vendor + "'), "
         } else {
           additionalRelationQuery += "(" + parseInt(relationElement.local_relation_id) + "," + relationElement.group_id + ","
-                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "',"
-                               + relationElement.table_row_option + "," + relationElement.table_row_vendor + ")"
+                               + relationElement.dattribute_id + ",'" + relationElement.excepts + "','"
+                               + relationElement.table_row_option + "','" + relationElement.table_row_vendor + "')"
         }
       }
       await pgClient.query(initialRelationQuery + additionalRelationQuery)
@@ -650,11 +561,155 @@ async function relationUpload() {
   return true
 }
 
+async function updateHiddenAttributes() {
+  const client = await MongoClient.connect(mongoUrl)
+  const mydb = client.db(dbName)
+  const localRelationCollection = mydb.collection('local-drellations')
+  const hideRelationCollection = mydb.collection('local-dattribute-relation')
+  
+  const localRelationList = await localRelationCollection.find().toArray()
+
+  await asyncForEach(localRelationList, async (lr) => {
+    if (lr.excepts != '') {
+      const exceptIdList = lr.excepts.split(',')
+      let exceptNewIdList = await hideRelationCollection.find({
+        originId: {
+          $in: exceptIdList
+        }
+      }).project({
+        newId: 1
+      }).toArray()
+      exceptNewIdList = exceptNewIdList.map(exItem => exItem.newId)
+      const uniqueIdList = exceptNewIdList.filter((elem, pos) => {
+        return exceptNewIdList.indexOf(elem) == pos
+      })
+
+      localRelationCollection.updateOne(
+        {
+          _id: lr._id
+        },
+        {
+          $set: {
+            excepts: uniqueIdList.join(',')
+          }
+        }
+      )
+    }
+  })
+  console.log('end except updating')
+}
+
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
 
+/*
+async function insertGroup(groupTitle, templateId, displayOrder) {
+  const d = new Date()
+  var groupUploadQueryText = `INSERT INTO groups(
+    label, display_order,
+    created_at, updated_at,
+    template_id
+  ) VALUES(
+    $1, $2, $3, $4, $5
+  ) 
+  RETURNING id`
+  var groupUploadValues = [
+    groupTitle, displayOrder,
+    d, d,
+    parseInt(templateId)
+  ]
+
+  const groupUploadResponse = await pgClient.query(groupUploadQueryText, groupUploadValues)
+
+  return groupUploadResponse.rows[0].id
+}
+
+async function insertAttribute(attrInstance, attr) {
+  var attributeId = 0
+
+  // Check if attribute already exists, no? then, upload
+  var attributeFindQueryText = `SELECT id, label FROM dattributes 
+                                WHERE label=$1::text AND price=$2 
+                                  AND price_type=$3 AND attribute_code=$4 AND vendor_sku=$5`
+
+  var attributeFindValues = [
+                              attr.Attribute.trim(), attr.Price, 
+                              attr.PriceType, attr.AttributeCode.trim(), attr.MFGCode.trim()
+                            ]
+  
+  await pgClient
+    .query(attributeFindQueryText, attributeFindValues)
+    .then(async (attributeFindRes) => {
+      if (attributeFindRes.rowCount == 0) { // Upload new attribute
+        // console.log('insert: ', attr.Attribute)
+        var attributeUploadQueryText = `INSERT INTO dattributes(
+            label, price, price_type,
+            weight, width, length,
+            girth, attribute_code, store_list, weight2,
+            width2, length2, girth2,
+            weight3, width3, length3,
+            girth3, freight, min_ship_quantity,
+            max_ship_quantity, ship_price_percent, vendor_sku
+          ) VALUES(
+            $1, $2, $3, $4, $5, $6, $7,
+            $8, $9, $10, $11, $12, $13, $14,
+            $15, $16, $17, $18, $19, $20, $21,
+            $22
+          ) 
+          RETURNING id`
+        var attributeUploadValues = [
+          attr.Attribute.trim(), attr.Price, attr.PriceType,
+          attr.Weight, attr.Width, attr.Length,
+          attr.Girth, attr.AttributeCode.trim(), 'displays4sale.myshopify.com', attr.Weight2,
+          attr.Width2, attr.Length2, attr.Girth2,
+          attr.Weight3, attr.Width3, attr.Length3,
+          attr.Girth3, attr.Freight, attr.MinQuantityShip,
+          attr.MaxQuantityShip, attr.ShipPricePercent, attr.MFGCode.trim()
+        ]
+
+        await pgClient
+          .query(attributeUploadQueryText, attributeUploadValues)
+          .then(attributeUploadRes => {
+            attributeId = attributeUploadRes.rows[0].id
+            console.log('++++++ attribute id: ', attributeUploadRes.rows[0].id)
+          })
+      } else { // This attribute already exists
+        attributeId = attributeFindRes.rows[0].id
+        console.log('----attribute id: ', attributeId)
+      }
+      await attrInstance.insertOne({
+        originId: attr.AttributeID,
+        newId: attributeId
+      })
+    })
+
+  return attributeId
+}
+
+async function insertRelation(groupId, attributeId, excepts, tablerowOption, tablerowVendor) {
+  var relationUploadQueryText = `INSERT INTO drellations(
+    group_id, dattribute_id, excepts, table_row_option, table_row_vendor
+  ) VALUES(
+    $1, $2, $3, $4, $5
+  ) 
+  RETURNING id`
+  var relationUploadValues = [
+    groupId, attributeId, excepts, tablerowOption, tablerowVendor
+  ]
+
+  const relationUploadResponse = await pgClient.query(relationUploadQueryText, relationUploadValues)
+
+  return relationUploadResponse.rows[0].id
+}
+*/
+
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array)
+  }
+}
 
 module.exports = router
