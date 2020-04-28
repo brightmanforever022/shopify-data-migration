@@ -103,7 +103,7 @@ router.get("/", async (req, res, next) => {
     ProductID: {
       $in: testProductIDList
     },
-    // ProductID: 'sswf',
+    // ProductID: 'tlbs',
     SiteID: 1
   }).project({
     ProductID: 1, SiteID: 1, template_id: 1
@@ -131,6 +131,8 @@ router.get("/", async (req, res, next) => {
       return acc
     }, {})
     const attributeList = proAttributeIdList.map(attrId => attributes[attrId])
+
+    // console.log('attribute list: ', attributeList.slice(36, 41))
 
     // get the list of attribute categoriy id related with this product
     let proAttributeCategoryIdList = attributeList.map(attr => attr.AttribCatID)
@@ -203,22 +205,25 @@ router.get("/", async (req, res, next) => {
         }
       })
     })
+    // */
   })
 
   console.log('generation end')
   await updateHiddenAttributes()
-  console.log('except updating end. Please upload to the db of online store.')
+  console.log('except updating end.')
+  await uploadAll()
+  console.log('end uploading')
 })
 
-router.get('/tostore', async (req, res, next) => {
-  res.render('home')
-
+async function uploadAll() {
   await groupUpload()
+  console.log('uploaded groups')
   await attributeUpload()
+  console.log('uploaded attributes')
   await relationUpload()
-
-  console.log('end of uploading with group, attribute and relation')
-})
+  console.log('uploaded relations')
+  return true
+}
 
 
 // Get new attribute data
@@ -313,12 +318,19 @@ async function insertLocalGroup(collectionInstance, groupTitle, templateId, disp
 
 async function insertLocalAttribute(collectionInstance, attr, localRelationInstance) {
   var attributeId = 0
+  let attributeLabel = ''
+  if (attr.PriceType) {
+    attributeLabel = attr.Attribute.replace(/ *\([^)]*charge\)/g, "")
+  } else {
+    attributeLabel = attr.Attribute.replace(/ *\(\+[^)]*\)/g, "")
+  }
 
   // Check if attribute already exists, no? then, upload
   const attributeFind = await collectionInstance.find({
-    label: attr.Attribute.trim(),
+    label: attributeLabel,
     price: attr.Price,
     price_type: attr.PriceType,
+    attribute_code: attr.AttributeCode,
     attribute_sku: attr.AttributeSku,
     vendor_sku: attr.VendorSku,
   }).toArray()
@@ -326,7 +338,7 @@ async function insertLocalAttribute(collectionInstance, attr, localRelationInsta
   if (attributeFind.length == 0) { // Upload new attribute
     await collectionInstance.insertOne({
       local_attribute_id: localdattributeIndex,
-      label: attr.Attribute.trim(),
+      label: attributeLabel,
       price: attr.Price,
       price_type: attr.PriceType,
       weight: attr.Weight,
@@ -426,7 +438,6 @@ async function groupUpload() {
 
     console.log('group uploaded: ', (index + 1) + ' of ' + groupUploadTimes)
   })
-  console.log('end uploading of group')
   return true
 }
 
@@ -504,7 +515,6 @@ async function attributeUpload() {
 
     console.log('attribute uploaded: ', (index + 1) + ' of ' + attributeUploadTimes)
   })
-  console.log('end uploading of attribute')
   return true
 }
 
@@ -557,7 +567,6 @@ async function relationUpload() {
 
     console.log('relation uploaded: ', (index + 1) + ' of ' + relationUploadTimes)
   })
-  console.log('end uploading of relation')
   return true
 }
 
