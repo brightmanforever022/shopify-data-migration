@@ -572,8 +572,9 @@ router.get('/createTestProduct', async (req, res, next) => {
 			}
 		})
 
-		const meta_has_warranty = productItem.HasWarranty
-		const meta_warranty_content = productItem.WarrantyPopup
+		const meta_has_warranty = productItem.HasWarranty ? 'true' : 'false'
+		let meta_warranty_content = productItem.WarrantyPopup
+		meta_warranty_content = meta_warranty_content.split('Our Customer Service Specialists')[0]
 
 		// getting string of sizechart
 		let sizechartString = ''
@@ -1156,7 +1157,7 @@ router.get('/updatefields', async (req, res, next) => {
 		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
 		const meta_description = productItem.Section1Content
 		const meta_features_title = productItem.Section2Title
-		const meta_features_content = productItem.Section2Content
+		const meta_features_content = productItem.Section2Content.split('CALL US FOR A QUOTE')[0]
 		let meta_additional_title1 = ''
 		let meta_additional_content1 = ''
 		let meta_otheroptions_content1 = ''
@@ -1167,22 +1168,22 @@ router.get('/updatefields', async (req, res, next) => {
 		let meta_additional_content3 = ''
 		let meta_otheroptions_content3 = ''
 		if (sectionTitleList1.includes(productItem.Section3Title)) {
-			meta_otheroptions_content1 = productItem.Section3Content
+			meta_otheroptions_content1 = changeLink(productItem.Section3Content)
 		} else {
 			meta_additional_title1 = productItem.Section3Title
-			meta_additional_content1 = productItem.Section3Content
+			meta_additional_content1 = changeLink(productItem.Section3Content)
 		}
 		if (sectionTitleList2.includes(productItem.Section4Title)) {
-			meta_otheroptions_content2 = productItem.Section4Content
+			meta_otheroptions_content2 = changeLink(productItem.Section4Content)
 		} else {
 			meta_additional_title2 = productItem.Section4Title
-			meta_additional_content2 = productItem.Section4Content
+			meta_additional_content2 = changeLink(productItem.Section4Content)
 		}
 		if (sectionTitleList3.includes(productItem.Section5Title)) {
-			meta_otheroptions_content3 = productItem.Section5Content
+			meta_otheroptions_content3 = changeLink(productItem.Section5Content)
 		} else {
 			meta_additional_title3 = productItem.Section5Title
-			meta_additional_content3 = productItem.Section5Content
+			meta_additional_content3 = changeLink(productItem.Section5Content)
 		}
 		
 		const meta_specifications_title = 'Specifications'
@@ -1301,7 +1302,8 @@ router.get('/updatefields', async (req, res, next) => {
 		})
 
 		const meta_has_warranty = productItem.HasWarranty ? 'true' : 'false'
-		const meta_warranty_content = productItem.WarrantyPopup
+		let meta_warranty_content = productItem.WarrantyPopup
+		meta_warranty_content = meta_warranty_content.split('Our Customer Service Specialists')[0]
 
 		// getting string of sizechart
 		let sizechartString = ''
@@ -1361,12 +1363,12 @@ router.get('/updatefields', async (req, res, next) => {
 			// ],
 			// meta data
 			'metafields': [
-				{
-					key: 'qty_discounts',
-					value: meta_qty_discounts,
-					value_type: 'string',
-					namespace: 'block'
-				},
+				// {
+				// 	key: 'qty_discounts',
+				// 	value: meta_qty_discounts,
+				// 	value_type: 'string',
+				// 	namespace: 'block'
+				// },
 				// {
 				// 	'key': 'display_price',
 				// 	'value': meta_display_price,
@@ -1415,12 +1417,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'overview'
 				// },
-				// {
-				// 	key: 'features_content',
-				// 	value: meta_features_content,
-				// 	value_type: 'string',
-				// 	namespace: 'overview'
-				// },
+				{
+					key: 'features_content',
+					value: meta_features_content,
+					value_type: 'string',
+					namespace: 'overview'
+				},
 				// {
 				// 	key: 'product_badges',
 				// 	value: meta_product_badges,
@@ -1613,12 +1615,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'shipping'
 				// },
-				{
-					key: 'shipping_summary',
-					value: meta_qty_discounts,
-					value_type: 'string',
-					namespace: 'shipping'
-				},
+				// {
+				// 	key: 'shipping_summary',
+				// 	value: meta_qty_discounts,
+				// 	value_type: 'string',
+				// 	namespace: 'shipping'
+				// },
 				// {
 				// 	key: 'related_products',
 				// 	value: meta_related_products,
@@ -1884,5 +1886,48 @@ router.get("/createproducts", async (req, res, next) => {
 	})
 	res.render('home')
 })
+
+router.get('/testfunction', (req, res, next) => {
+	res.render('home')
+	const resultStr = changeLink('<ul><li><font color="#333333">Frame Orientation:&nbsp;Portrait or Landscape&nbsp;(<a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=374,height=325\');return false;" href="//www.displays4sale.com/SoftContent/frameorientation/frameorientation.html">click here</a>) </font></li><li><font color="#333333">Interior Box Finish: White or Black Melamine | or Silver Metal Laminate </font></li><li><font color="#333333">Side Plunge Lock &amp; Key (see above)</font></li></ul>')
+	console.log('result: ', resultStr)
+})
+
+function changeLink(str) {
+	// const contents = str.split('www.displays4sale.com/')
+	// if (contents.length > 1) {
+	// 	let linkStr = contents[1].split('" target')
+	// 	if(linkStr.length > 1) {
+	// 		const fileName = linkStr[0].split('/').pop()
+	// 		linkStr.splice(0, 1)
+	// 		const totalContent = contents[0] + 'cdn.shopify.com/s/files/1/0036/4393/2761/files/' + fileName + '" target' + linkStr.join('')
+	// 		return totalContent
+	// 	} else {
+	// 		linkStr = contents[1].split('">')
+	// 		const fileName = linkStr[0].split('/').pop()
+	// 		linkStr.splice(0, 1)
+	// 		let totalContent = contents[0] + 'cdn.shopify.com/s/files/1/0036/4393/2761/files/' + fileName + '">' + linkStr.join('')
+	// 		return totalContent
+	// 	}
+	
+	// } else {
+	// 	return contents[0]
+	// }
+	const re = /"(.*?)displays4sale.com(.*?)"/g;
+  const result = [];
+  let current;
+  while (current = re.exec(str)) {
+		// console.log('current: ', current)
+		result.push(current.pop());
+  }
+  return result.length > 0
+    ? result
+		: [str];
+		
+	// const matches = str.match(/"displays4sale.com(.*?)"/g);
+	// return matches
+	// 	? matches[1]
+	// 	: str;
+}
 
 module.exports = router
