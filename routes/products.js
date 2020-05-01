@@ -1417,12 +1417,12 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'overview'
 				// },
-				{
-					key: 'features_content',
-					value: meta_features_content,
-					value_type: 'string',
-					namespace: 'overview'
-				},
+				// {
+				// 	key: 'features_content',
+				// 	value: meta_features_content,
+				// 	value_type: 'string',
+				// 	namespace: 'overview'
+				// },
 				// {
 				// 	key: 'product_badges',
 				// 	value: meta_product_badges,
@@ -1465,24 +1465,24 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'additions'
 				// },
-				// {
-				// 	key: 'content1',
-				// 	value: meta_otheroptions_content1,
-				// 	value_type: 'string',
-				// 	namespace: 'other_options'
-				// },
-				// {
-				// 	key: 'content2',
-				// 	value: meta_otheroptions_content2,
-				// 	value_type: 'string',
-				// 	namespace: 'other_options'
-				// },
-				// {
-				// 	key: 'content3',
-				// 	value: meta_otheroptions_content3,
-				// 	value_type: 'string',
-				// 	namespace: 'other_options'
-				// },
+				{
+					key: 'content1',
+					value: meta_otheroptions_content1,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
+				{
+					key: 'content2',
+					value: meta_otheroptions_content2,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
+				{
+					key: 'content3',
+					value: meta_otheroptions_content3,
+					value_type: 'string',
+					namespace: 'other_options'
+				},
 				// {
 				// 	key: 'subject',
 				// 	value: meta_specifications_title,
@@ -1889,8 +1889,12 @@ router.get("/createproducts", async (req, res, next) => {
 
 router.get('/testfunction', (req, res, next) => {
 	res.render('home')
-	const resultStr = changeLink('<ul><li><font color="#333333">Frame Orientation:&nbsp;Portrait or Landscape&nbsp;(<a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=374,height=325\');return false;" href="//www.displays4sale.com/SoftContent/frameorientation/frameorientation.html">click here</a>) </font></li><li><font color="#333333">Interior Box Finish: White or Black Melamine | or Silver Metal Laminate </font></li><li><font color="#333333">Side Plunge Lock &amp; Key (see above)</font></li></ul>')
-	console.log('result: ', resultStr)
+	const str1 = '<ul><li><font color="#333333">Frame Orientation:&nbsp;Portrait or Landscape&nbsp;(<a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=374,height=325\');return false;" href="//www.displays4sale.com/SoftContent/frameorientation/frameorientation.html">click here</a>) </font></li><li><font color="#333333">Interior Box Finish: White or Black Melamine | or Silver Metal Laminate </font></li><li><font color="#333333">Side Plunge Lock &amp; Key (see above)</font></li></ul>'
+	const str2 = ''
+	const str3 = ''
+	console.log('result: ', changeLink(str1))
+	console.log('result: ', changeLink(str2))
+	console.log('result: ', changeLink(str3))
 })
 
 function changeLink(str) {

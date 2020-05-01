@@ -328,6 +328,7 @@ async function insertLocalAttribute(collectionInstance, attr, localRelationInsta
   // Check if attribute already exists, no? then, upload
   const attributeFind = await collectionInstance.find({
     label: attributeLabel,
+    attributeCateID: attr.AttribCatID,
     price: attr.Price,
     price_type: attr.PriceType,
     attribute_code: attr.AttributeCode,
@@ -338,6 +339,7 @@ async function insertLocalAttribute(collectionInstance, attr, localRelationInsta
   if (attributeFind.length == 0) { // Upload new attribute
     await collectionInstance.insertOne({
       local_attribute_id: localdattributeIndex,
+      attributeCateID: attr.AttribCatID,
       label: attributeLabel,
       price: attr.Price,
       price_type: attr.PriceType,
