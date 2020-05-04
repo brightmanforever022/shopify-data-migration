@@ -426,9 +426,9 @@ router.get('/createTestProduct', async (req, res, next) => {
 		}
 
 		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
-		const meta_description = productItem.Section1Content
+		const meta_description = changeLink(productItem.Section1Content)
 		const meta_features_title = productItem.Section2Title
-		const meta_features_content = productItem.Section2Content
+		const meta_features_content = changeLink(productItem.Section2Content)
 		let meta_additional_title1 = ''
 		let meta_additional_content1 = ''
 		let meta_otheroptions_content1 = ''
@@ -439,22 +439,22 @@ router.get('/createTestProduct', async (req, res, next) => {
 		let meta_additional_content3 = ''
 		let meta_otheroptions_content3 = ''
 		if (sectionTitleList1.includes(productItem.Section3Title)) {
-			meta_otheroptions_content1 = productItem.Section3Content
+			meta_otheroptions_content1 = changeLink(productItem.Section3Content)
 		} else {
 			meta_additional_title1 = productItem.Section3Title
-			meta_additional_content1 = productItem.Section3Content
+			meta_additional_content1 = changeLink(productItem.Section3Content)
 		}
 		if (sectionTitleList2.includes(productItem.Section4Title)) {
-			meta_otheroptions_content2 = productItem.Section4Content
+			meta_otheroptions_content2 = changeLink(productItem.Section4Content)
 		} else {
 			meta_additional_title2 = productItem.Section4Title
-			meta_additional_content2 = productItem.Section4Content
+			meta_additional_content2 = changeLink(productItem.Section4Content)
 		}
 		if (sectionTitleList3.includes(productItem.Section5Title)) {
-			meta_otheroptions_content3 = productItem.Section5Content
+			meta_otheroptions_content3 = changeLink(productItem.Section5Content)
 		} else {
 			meta_additional_title3 = productItem.Section5Title
-			meta_additional_content3 = productItem.Section5Content
+			meta_additional_content3 = changeLink(productItem.Section5Content)
 		}
 		
 		const meta_specifications_title = 'Specifications'
@@ -1155,9 +1155,9 @@ router.get('/updatefields', async (req, res, next) => {
 		}
 
 		const meta_description_title = productItem.Section1Title == '' ? 'Description' : productItem.Section1Title
-		const meta_description = productItem.Section1Content
+		const meta_description = changeLink(productItem.Section1Content)
 		const meta_features_title = productItem.Section2Title
-		const meta_features_content = productItem.Section2Content.split('CALL US FOR A QUOTE')[0]
+		const meta_features_content = changeLink(productItem.Section2Content.split('CALL US FOR A QUOTE')[0])
 		let meta_additional_title1 = ''
 		let meta_additional_content1 = ''
 		let meta_otheroptions_content1 = ''
@@ -1405,24 +1405,24 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'overview'
 				// },
-				// {
-				// 	key: 'description',
-				// 	value: meta_description,
-				// 	value_type: 'string',
-				// 	namespace: 'overview'
-				// },
+				{
+					key: 'description',
+					value: meta_description,
+					value_type: 'string',
+					namespace: 'overview'
+				},
 				// {
 				// 	key: 'features_title',
 				// 	value: meta_features_title,
 				// 	value_type: 'string',
 				// 	namespace: 'overview'
 				// },
-				// {
-				// 	key: 'features_content',
-				// 	value: meta_features_content,
-				// 	value_type: 'string',
-				// 	namespace: 'overview'
-				// },
+				{
+					key: 'features_content',
+					value: meta_features_content,
+					value_type: 'string',
+					namespace: 'overview'
+				},
 				// {
 				// 	key: 'product_badges',
 				// 	value: meta_product_badges,
@@ -1447,24 +1447,24 @@ router.get('/updatefields', async (req, res, next) => {
 				// 	value_type: 'string',
 				// 	namespace: 'additions'
 				// },
-				// {
-				// 	key: 'content1',
-				// 	value: meta_additional_content1,
-				// 	value_type: 'string',
-				// 	namespace: 'additions'
-				// },
-				// {
-				// 	key: 'content2',
-				// 	value: meta_additional_content2,
-				// 	value_type: 'string',
-				// 	namespace: 'additions'
-				// },
-				// {
-				// 	key: 'content3',
-				// 	value: meta_additional_content3,
-				// 	value_type: 'string',
-				// 	namespace: 'additions'
-				// },
+				{
+					key: 'content1',
+					value: meta_additional_content1,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content2',
+					value: meta_additional_content2,
+					value_type: 'string',
+					namespace: 'additions'
+				},
+				{
+					key: 'content3',
+					value: meta_additional_content3,
+					value_type: 'string',
+					namespace: 'additions'
+				},
 				{
 					key: 'content1',
 					value: meta_otheroptions_content1,
@@ -1889,15 +1889,38 @@ router.get("/createproducts", async (req, res, next) => {
 
 router.get('/testfunction', (req, res, next) => {
 	res.render('home')
-	const str1 = '<ul><li><font color="#333333">Frame Orientation:&nbsp;Portrait or Landscape&nbsp;(<a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=374,height=325\');return false;" href="//www.displays4sale.com/SoftContent/frameorientation/frameorientation.html">click here</a>) </font></li><li><font color="#333333">Interior Box Finish: White or Black Melamine | or Silver Metal Laminate </font></li><li><font color="#333333">Side Plunge Lock &amp; Key (see above)</font></li></ul>'
-	const str2 = ''
-	const str3 = ''
-	console.log('result: ', changeLink(str1))
-	console.log('result: ', changeLink(str2))
-	console.log('result: ', changeLink(str3))
+	const str1 = 'VIEW ALL OUR <a href="//www.displays4sale.com/Categories.aspx?c=Shadow-Boxes">SHADOW BOXES DISPLAY CASES</a></font><br><strong><font size="3"><a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=650,height=550\');return false;" href="//www.displays4sale.com/SoftContent/Shadowbox-Pop-Ups/PortraitWide.html"><font color="#366694">(<font color="#366694"><strong>click here</strong></font></font></a><font color="#366694"><strong>)<br></strong> <strong><font color="#ffffff"><font size="1">OR</font></font><br><font color="#366694">Shadow Box:</font> <font color="#000000">Landscape</font>&nbsp;(</strong><a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=650,height=550\');return false;" href="//www.displays4sale.com/SoftContent/Shadowbox-Pop-Ups/LandscapeWide.html"><font color="#366694"><strong>click here</strong></font></a><strong>)'
+	const str2 = '<ul><li>Shadowbox Frame Orientation:&nbsp;Portrait or Landscape&nbsp;(<a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=374,height=325\');return false;" href="//www.displays4sale.com/SoftContent/frameorientation/frameorientation.html">click here</a>) </li><li>Interior Box Finish: White or Black Melamine | or Complimentary Laminate</li><strong></strong></span>'
+	const str3 = '<font size="2"><font color="#333333"><a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=650,height=550\');return false;" href="//www.displays4sale.com/SoftContent/Shadowbox-Pop-Ups/shelf-support-clips.html"><font color="#3333ff"><u><strong><font size="2">View Close Up</font></strong></u></font></a><strong><font color="#333333" size="2">)</font></strong><br></strong><ul><li>Shadowboxes with an interior size of 48" or less, receive metal support clips</li><li>Shelf holes are aligned on the interior sides for shelf height adjustment</li><li>Shelf holes are spaced out 2 1/2" apart down the interior sides</li><li>(4) shelf clips per shelf are included (sized to fit&nbsp;the pre-drilled shelf holes)</li><li>If you select a Fabric Cork Board Backer, the overall depth is <u><b>reduced by 1/4"</b></u></li></ul><p><font color="#990000">*IF YOU\'RE PLANNING ON DISPLAYING HEAVY ITEMS AND WOULD PREFER TO HAVE STANDARDS WITH SHELF BRACKETS INSTALLED FOR ADDED SUPPORT, CALL US FOR A QUOTE!<br><br></font><font color="#cc6600" size="3"><b>Standards with Shelf Brackets </b></font><strong><font color="#333333" size="2"><strong>(</strong></font><font color="#3333ff"><a onclick="javascript:window.open(this.href,\'\',\'left=10,top=10,width=650,height=550\');return false;" href="//www.displays4sale.com/SoftContent/Shadowbox-Pop-Ups/stand-offs.html"><u><strong><font size="2">'
+	const str4 = '<font color="#333333" size="2"><b>Number of Glass Shelves<font color="#006600"> (Order up to <font size="3">6</font> for your Display Case)</font><br></b></font><ul><li>Choose between 1, 2, 3, 4,&nbsp;5 or&nbsp;6 shelves for your shadowbox&nbsp;display</li></ul><ul><li>Additional shelves or replacement shelves are available upon request</li></ul><font color="#333333"><strong><font size="2"><br></font></strong></font><b><font color="#333333" size="2">Annealed Glass Shelves (1/4" Thick)</font></b><font color="#333333"><strong><br></strong></font><ul><li>Most display cases&nbsp;sold come standard with 1/4" thick plate glass</li></ul><ul><li>1/4" thick plate glass with buffed edges is&nbsp;ideal for lightweight items</li></ul><strong><br></strong><font color="#333333"><b><font size="2">Annealed Glass Shelves (3/8" Thick)</font></b></font><br><font color="#333333"></font><ul><li>3/8" thick glass with buffed edges provide an elegant sturdy shelf</li></ul><font color="#333333"></font><ul><li>The 3/8" thickness is perfect for heavier items being placed inside the&nbsp;display<font color="#333333"> </font>case while presenting an impressive look for your<font color="#333333">&nbsp;</font>interior environment</li></ul><font color="#ff0000"><font color="#333333"></font></font><ul><li><font color="#3366ff">* 3/8" thick glass is recommended for shelves wider than 36"</font></li></ul><font color="#3366ff"><br><font color="#990000"><font size="2">IF YOU\'RE INTERESTED IN <u>TEMPERED GLASS SHELVES</u>,<br>PLEASE CONTACT CUSTOMER SERVICE FOR A QUOTE!</font><br></font></font>'
+	const str5 = '<font color="#3333ff"><u><font size="4"><b><a href="//www.displays4sale.com/SoftContent/pdfs/LED-Lighting-Information.pdf" target="_blank">CLICK HERE FOR MORE DETAILED LED SPECIFICATIONS</a></b></font></u></font></p>'
+	console.log('---------------------------------')
+	console.log('result1: ', changeLink(str1))
+	console.log('---------------------------------')
+	console.log('result2: ', changeLink(str2))
+	console.log('---------------------------------')
+	console.log('result3: ', changeLink(str3))
+	console.log('---------------------------------')
+	console.log('result4: ', changeLink(str4))
+	console.log('---------------------------------')
+	console.log('result5: ', changeLink(str5))
 })
 
 function changeLink(str) {
+	let temp = str
+	var links = getLink(temp)
+	if (links) {
+		links.forEach(lk => {
+			const fileName = lk.split('/').pop()
+			temp = temp.replace(/displays4sale.com/gi, 'displays4sale.myshopify.com')
+			temp = temp.replace(lk, '/' + fileName)
+		})
+	}
+
+	return temp
+}
+
+function getLink(str) {
 	// const contents = str.split('www.displays4sale.com/')
 	// if (contents.length > 1) {
 	// 	let linkStr = contents[1].split('" target')
@@ -1921,17 +1944,9 @@ function changeLink(str) {
   const result = [];
   let current;
   while (current = re.exec(str)) {
-		// console.log('current: ', current)
 		result.push(current.pop());
   }
-  return result.length > 0
-    ? result
-		: [str];
-		
-	// const matches = str.match(/"displays4sale.com(.*?)"/g);
-	// return matches
-	// 	? matches[1]
-	// 	: str;
+  return result.length > 0 ? result : null
 }
 
 module.exports = router
